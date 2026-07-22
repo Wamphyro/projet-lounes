@@ -29,8 +29,13 @@ const M = 16;        // marge (mm)
 const W = 210;       // largeur A4
 const DROITE = W - M;
 
-const eur = (n: number) =>
-    `${n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
+/* La police intégrée de jsPDF est en CP1252 : l'espace fine insécable (U+202F)
+   du format fr-FR et le signe moins typographique (U+2212) n'existent pas et
+   corrompent le rendu — on les remplace par espace et tiret simples. */
+const nb = (n: number) =>
+    n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+        .replace(/[  ]/g, ' ');
+const eur = (n: number) => `${nb(n)} €`;
 
 /* — Monogramme DC vectoriel (D en béziers, C en cercle avec ouverture) — */
 function monogramme(doc: jsPDF, x: number, y: number, h: number) {
@@ -122,7 +127,7 @@ function tableauLignes(doc: jsPDF, y: number, lignes: { nom: string; surface: nu
         head: [['Désignation', 'Surface', 'PU TTC', 'Total TTC']],
         body: lignes.map((l) => [
             l.nom,
-            `${l.surface.toLocaleString('fr-FR')} m²`,
+            `${nb(l.surface)} m²`,
             `${eur(l.prix)}/m²`,
             eur(l.surface * l.prix),
         ]),
@@ -157,9 +162,9 @@ function blocTotaux(doc: jsPDF, y: number, libelle: string, sousTotal: number, r
         doc.text(eur(sousTotal), DROITE - 4, cy, { align: 'right' });
         cy += 5.5;
         doc.setTextColor(...TAUPE);
-        doc.text(`Remise commerciale (−${remisePct} %)`, x + 4, cy);
+        doc.text(`Remise commerciale (-${remisePct} %)`, x + 4, cy);
         doc.setTextColor(...ENCRE);
-        doc.text(`−${eur(sousTotal - total)}`, DROITE - 4, cy, { align: 'right' });
+        doc.text(`-${eur(sousTotal - total)}`, DROITE - 4, cy, { align: 'right' });
         cy += 4;
     }
     doc.setFillColor(...SABLE);
