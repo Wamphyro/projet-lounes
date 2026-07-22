@@ -48,13 +48,20 @@ export function ClientDevis() {
 
                     {sel && (
                         <div className="md-detail">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
                                 <div>
                                     <h2>{sel.id}</h2>
                                     <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 4 }}>Édité le {sel.date} · valable 60 jours</p>
                                 </div>
-                                <span className={`pill ${tone(sel.statut)}`}>{sel.statut === 'Envoyé' ? 'En attente de votre décision' : sel.statut}</span>
+                                <span className={`pill ${tone(sel.statut)}`} style={{ marginTop: 3 }}>
+                                    {sel.statut === 'Envoyé' ? 'À valider' : sel.statut}
+                                </span>
                             </div>
+                            {sel.statut === 'Envoyé' && (
+                                <p style={{ fontSize: 14, color: 'var(--ambre-fonce)', fontWeight: 600, margin: '12px 0 0' }}>
+                                    Ce devis attend votre décision — les prix sont fermes 60 jours.
+                                </p>
+                            )}
 
                             <table className="lignes-table">
                                 <thead>
