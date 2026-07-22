@@ -23,6 +23,24 @@ const ts = (d: string) => {
     return (a ?? 0) * 10000 + (m ?? 0) * 100 + (j ?? 0);
 };
 
+/* Conversions jj/mm/aaaa ↔ aaaa-mm-jj (input type="date") + âge. */
+const versInputDate = (fr: string) => {
+    const [j, m, a] = fr.split('/');
+    return j && m && a ? `${a}-${m.padStart(2, '0')}-${j.padStart(2, '0')}` : '';
+};
+const versDateFr = (iso: string) => {
+    const [a, m, j] = iso.split('-');
+    return a && m && j ? `${j}/${m}/${a}` : '';
+};
+const age = (fr: string) => {
+    const [j, m, a] = fr.split('/').map(Number);
+    if (!j || !m || !a) return null;
+    const now = new Date();
+    let ans = now.getFullYear() - a;
+    if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < j)) ans--;
+    return ans;
+};
+
 const toneDevis = (s: string) =>
     s === 'Accepté' ? 'ok' : s === 'Envoyé' ? 'warn' : s === 'Refusé' ? 'bad' : s === 'Facturé' ? 'info' : 'off';
 const toneCommande = (s: string) => (s === 'Livrée' ? 'ok' : s === 'En livraison' ? 'info' : 'warn');
@@ -68,14 +86,14 @@ export function ProClients() {
         : [];
 
     /* — Formulaire (création ET édition) — */
-    const vide = { nom: '', type: 'Particulier' as TypeClient, email: '', tel: '', adresse: '', contact: '', siret: '', origine: '', notes: '' };
+    const vide = { nom: '', type: 'Particulier' as TypeClient, email: '', tel: '', adresse: '', dateNaissance: '', contact: '', siret: '', origine: '', notes: '' };
     const [form, setForm] = useState(vide);
     const maj = (k: keyof typeof vide) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
         setForm({ ...form, [k]: e.target.value });
 
     const ouvrirCreation = () => { setForm(vide); setMode('creation'); setSelId(null); };
     const ouvrirEdition = (c: Client) => {
-        setForm({ nom: c.nom, type: c.type, email: c.email, tel: c.tel, adresse: c.adresse, contact: c.contact ?? '', siret: c.siret ?? '', origine: c.origine ?? '', notes: c.notes ?? '' });
+        setForm({ nom: c.nom, type: c.type, email: c.email, tel: c.tel, adresse: c.adresse, dateNaissance: c.dateNaissance ? versInputDate(c.dateNaissance) : '', contact: c.contact ?? '', siret: c.siret ?? '', origine: c.origine ?? '', notes: c.notes ?? '' });
         setSelId(c.id);
         setMode('edition');
     };
@@ -84,7 +102,9 @@ export function ProClients() {
         if (!form.nom.trim()) return;
         const champs = {
             nom: form.nom.trim(), type: form.type, email: form.email.trim(), tel: form.tel.trim(),
-            adresse: form.adresse.trim(), contact: form.contact.trim() || undefined,
+            adresse: form.adresse.trim(),
+            dateNaissance: form.type === 'Particulier' && form.dateNaissance ? versDateFr(form.dateNaissance) : undefined,
+            contact: form.contact.trim() || undefined,
             siret: form.siret.trim() || undefined, origine: form.origine || undefined,
             notes: form.notes.trim() || undefined,
         };
@@ -162,6 +182,12 @@ export function ProClients() {
                                 <label htmlFor="fc-adresse">Adresse</label>
                                 <input id="fc-adresse" value={form.adresse} onChange={maj('adresse')} placeholder="N°, rue, code postal, ville" />
                             </div>
+                            {form.type === 'Particulier' && (
+                                <div className="field">
+                                    <label htmlFor="fc-naissance">Date de naissance</label>
+                                    <input id="fc-naissance" type="date" value={form.dateNaissance} onChange={maj('dateNaissance')} />
+                                </div>
+                            )}
                             {form.type === 'Professionnel' && (
                                 <>
                                     <div className="field">
@@ -217,6 +243,9 @@ export function ProClients() {
                                 <tr><td>Email</td><td>{sel.email ? <a href={`mailto:${sel.email}`} style={{ textDecoration: 'underline' }}>{sel.email}</a> : '—'}</td></tr>
                                 <tr><td>Téléphone</td><td>{sel.tel ? <a href={`tel:${sel.tel.replace(/ /g, '')}`} style={{ textDecoration: 'underline' }}>{sel.tel}</a> : '—'}</td></tr>
                                 <tr><td>Adresse</td><td>{sel.adresse || '—'}</td></tr>
+                                {sel.dateNaissance && (
+                                    <tr><td>Date de naissance</td><td>{sel.dateNaissance}{age(sel.dateNaissance) !== null ? ` (${age(sel.dateNaissance)} ans)` : ''}</td></tr>
+                                )}
                                 {sel.contact && <tr><td>Interlocuteur</td><td>{sel.contact}</td></tr>}
                                 {sel.siret && <tr><td>SIRET</td><td>{sel.siret}</td></tr>}
                             </tbody>
