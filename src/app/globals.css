@@ -341,6 +341,125 @@ body::before {
 .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 28px; font-size: 13px; color: var(--taupe); flex-wrap: wrap; gap: 12px; }
 
 /* ============================================================
+   13bis. Pages intérieures — en-tête, fil d'ariane, filtres,
+          formulaires, créneaux RDV, fiches produit, FAQ
+   ============================================================ */
+
+/* En-tête de page intérieure (compense la nav fixe) */
+.page-hero { background: var(--sable); padding: 150px 0 64px; }
+.page-hero h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(38px, 6vw, 76px); line-height: 1.02;
+    letter-spacing: -0.02em; margin: 14px 0 16px;
+}
+.page-hero .lead { color: var(--taupe); font-size: 18px; max-width: 620px; }
+
+.breadcrumbs { font-size: 13px; color: var(--taupe); margin-bottom: 18px; }
+.breadcrumbs a:hover { color: var(--ambre); }
+.breadcrumbs .sep { margin: 0 8px; opacity: .5; }
+
+/* Filtres (puces) */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+    font: inherit; font-size: 13px; font-weight: 600; padding: 8px 18px;
+    border-radius: 100px; border: 1px solid var(--ligne);
+    background: transparent; color: var(--encre); cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.chip:hover { border-color: var(--ambre); color: var(--ambre-fonce); }
+.chip.active { background: var(--encre); color: var(--creme); border-color: var(--encre); }
+.filter-bar { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+.filter-bar .label { font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--taupe); }
+
+/* Cartes produit (étend .card) */
+.pcard-price {
+    position: absolute; z-index: 2; top: 16px; right: 16px;
+    background: rgba(251, 248, 241, .92); color: var(--encre);
+    font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 100px;
+}
+.pcard-tags { font-size: 12px; color: rgba(247, 242, 233, .6); margin-top: 4px; display: block; }
+
+/* Fiche produit */
+.tile-visual { border-radius: var(--rayon-lg); overflow: hidden; aspect-ratio: 4 / 5; box-shadow: 0 30px 60px rgba(42, 36, 29, .14); position: relative; }
+.tile-visual .surface { position: absolute; inset: 0; }
+.price-line { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 6px; }
+.price-line .amount { font-family: var(--serif); font-size: 44px; color: var(--ambre); line-height: 1; }
+.price-line .unit { color: var(--taupe); font-size: 15px; }
+.price-note { font-size: 13px; color: var(--taupe); margin-bottom: 22px; }
+.spec-table { width: 100%; border-collapse: collapse; margin: 8px 0 26px; }
+.spec-table td { padding: 12px 0; border-top: 1px solid var(--ligne); font-size: 15px; vertical-align: top; }
+.spec-table td:first-child { color: var(--taupe); width: 38%; padding-right: 16px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { font-size: 13px; padding: 6px 14px; border-radius: 100px; background: var(--sable); color: var(--encre); }
+
+/* Formulaires (devis, RDV) */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--taupe); }
+.field input, .field select, .field textarea {
+    font: inherit; color: var(--encre);
+    padding: 13px 16px; border-radius: 14px;
+    border: 1px solid var(--ligne); background: var(--creme-2);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+.field textarea { min-height: 120px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--ambre); box-shadow: 0 0 0 3px rgba(192, 133, 43, .15);
+}
+.form-panel {
+    background: var(--creme-2); border: 1px solid var(--ligne);
+    border-radius: var(--rayon-lg); padding: clamp(28px, 4vw, 48px);
+}
+.form-ok {
+    background: var(--sable); border-radius: var(--rayon);
+    padding: 22px 26px; font-size: 15px; margin-top: 22px;
+}
+.form-ok b { color: var(--ambre-fonce); }
+
+/* Prise de RDV — sélection jour + créneau */
+.day-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+.day-chip {
+    min-width: 82px; text-align: center; padding: 12px 10px; border-radius: 16px;
+    border: 1px solid var(--ligne); background: var(--creme-2); cursor: pointer;
+    font: inherit; transition: background .2s ease, border-color .2s ease;
+}
+.day-chip .dow { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--taupe); }
+.day-chip .num { display: block; font-family: var(--serif); font-size: 22px; margin-top: 4px; }
+.day-chip.active { background: var(--encre); border-color: var(--encre); color: var(--creme); }
+.day-chip.active .dow { color: var(--ambre-clair); }
+.slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin-top: 18px; }
+
+/* FAQ (details/summary) */
+.faq { max-width: 760px; }
+.faq details { border-top: 1px solid var(--ligne); padding: 4px 0; }
+.faq details:last-child { border-bottom: 1px solid var(--ligne); }
+.faq summary {
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between;
+    align-items: center; gap: 16px; padding: 18px 0; font-weight: 600; font-size: 16px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-family: var(--serif); font-size: 26px; color: var(--ambre); flex-shrink: 0; transition: transform .25s ease; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { color: var(--taupe); padding: 0 0 20px; max-width: 640px; }
+
+/* Pages éditoriales (légal, services) */
+.prose { max-width: 760px; }
+.prose h2 { font-family: var(--serif); font-weight: 500; font-size: 27px; letter-spacing: -0.01em; margin: 40px 0 14px; }
+.prose p, .prose li { color: var(--taupe); font-size: 16px; margin-bottom: 12px; }
+.prose ul { padding-left: 20px; }
+.prose b { color: var(--encre); }
+
+/* Bandeau CTA fin de page intérieure */
+.inline-cta { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: var(--sable); border-radius: var(--rayon-lg); padding: clamp(26px, 4vw, 44px); }
+.inline-cta h3 { font-family: var(--serif); font-weight: 400; font-size: clamp(23px, 3vw, 34px); letter-spacing: -0.01em; }
+
+@media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .split-page { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
    14. Révélation au scroll ([data-reveal] + .is-visible,
        même convention que le site Nexio Audition)
    ============================================================ */

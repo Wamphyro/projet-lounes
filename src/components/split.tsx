@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { SPECS } from '@/lib/site-config';
 
 /** Matière en grand — média (matière CSS) + texte + liste de specs. */
@@ -18,9 +19,9 @@ export function Split() {
                             <li key={s}>{s}</li>
                         ))}
                     </ul>
-                    <a href="#showroom" className="btn dark">
+                    <Link href="/showroom/" className="btn dark">
                         Demander un échantillon
-                    </a>
+                    </Link>
                 </div>
             </div>
         </section>

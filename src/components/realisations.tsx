@@ -1,8 +1,9 @@
+import Link from 'next/link';
 import { REALISATIONS } from '@/lib/site-config';
 import { ProxyImg } from '@/components/proxy-img';
 import { Stats } from '@/components/stats';
 
-/** Réalisations — 3 photos proxy (repli dégradé) + chiffres clés. */
+/** Réalisations (accueil) — 3 projets mis en avant + chiffres clés. */
 export function Realisations() {
     return (
         <section className="section creme2" id="realisations">
@@ -15,7 +16,7 @@ export function Realisations() {
 
                 <div className="grid" data-reveal>
                     {REALISATIONS.map((r) => (
-                        <article className="card" key={r.seed}>
+                        <Link href={r.href} className="card" key={r.seed}>
                             <div className="surface photo">
                                 <ProxyImg seed={r.seed} w={800} h={1000} alt={`Réalisation — ${r.titre}`} />
                             </div>
@@ -23,8 +24,14 @@ export function Realisations() {
                                 <h3>{r.titre}</h3>
                                 <span>{r.sousTitre}</span>
                             </div>
-                        </article>
+                        </Link>
                     ))}
+                </div>
+
+                <div style={{ marginTop: 36 }} data-reveal>
+                    <Link href="/realisations/" className="btn dark">
+                        Voir toutes les réalisations
+                    </Link>
                 </div>
 
                 <Stats />

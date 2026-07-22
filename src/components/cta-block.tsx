@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { SITE } from '@/lib/site-config';
 
 /** Showroom / RDV — 2e moment sombre, bloc arrondi avec halo ambré. */
@@ -9,12 +10,12 @@ export function CtaBlock() {
                     <h2>Venez toucher la matière.</h2>
                     <p>
                         Notre showroom vous accueille sur rendez-vous pour comparer les finitions, à la
-                        lumière du jour comme du soir.
+                        lumière du jour comme du soir. Réservez votre créneau en ligne.
                     </p>
                     <div className="cta-actions">
-                        <a href={`mailto:${SITE.email}`} className="btn">
+                        <Link href="/showroom/" className="btn">
                             Prendre rendez-vous
-                        </a>
+                        </Link>
                         <a href={`tel:${SITE.phone.replace(/ /g, '')}`} className="btn ghost">
                             Nous appeler
                         </a>

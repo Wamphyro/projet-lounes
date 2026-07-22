@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { NAV_LINKS } from '@/lib/site-config';
 import { Logo } from '@/components/logo';
 
 /**
- * Navigation fixe : transparente sur le hero, puis fond crème flouté
+ * Navigation fixe : transparente en haut de page, puis fond crème flouté
  * (.is-scrolled) au-delà de 40 px de scroll. Menu mobile plein écran.
  */
 export function Nav() {
@@ -22,19 +23,19 @@ export function Nav() {
     return (
         <>
             <nav className={`nav${scrolled ? ' is-scrolled' : ''}`}>
-                <a href="#accueil" className="brand" aria-label="DEKA CÉRAM — accueil">
+                <Link href="/" className="brand" aria-label="DEKA CÉRAM — accueil">
                     <Logo />
-                </a>
+                </Link>
                 <ul className="nav-links">
                     {NAV_LINKS.map((l) => (
                         <li key={l.href}>
-                            <a href={l.href}>{l.label}</a>
+                            <Link href={l.href}>{l.label}</Link>
                         </li>
                     ))}
                 </ul>
-                <a href="#showroom" className="btn">
+                <Link href="/showroom/" className="btn">
                     Prendre rendez-vous
-                </a>
+                </Link>
                 <button
                     className="burger"
                     aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
@@ -49,10 +50,13 @@ export function Nav() {
 
             <div className={`mobile-menu${open ? ' open' : ''}`}>
                 {NAV_LINKS.map((l) => (
-                    <a key={l.href} href={l.href} onClick={() => setOpen(false)}>
+                    <Link key={l.href} href={l.href} onClick={() => setOpen(false)}>
                         {l.label}
-                    </a>
+                    </Link>
                 ))}
+                <Link href="/devis/" onClick={() => setOpen(false)}>
+                    Devis
+                </Link>
             </div>
         </>
     );

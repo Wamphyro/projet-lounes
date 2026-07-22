@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 /** Hero — scène sable chaude, grande accroche serif, indice de scroll. */
 export function Hero() {
     return (
@@ -14,12 +16,12 @@ export function Hero() {
                     intérieurs qui ne ressemblent à aucun autre.
                 </p>
                 <div className="hero-actions">
-                    <a href="#collections" className="btn">
+                    <Link href="/collections/" className="btn">
                         Découvrir les collections
-                    </a>
-                    <a href="#showroom" className="btn ghost">
+                    </Link>
+                    <Link href="/showroom/" className="btn ghost">
                         Visiter le showroom
-                    </a>
+                    </Link>
                 </div>
             </div>
             <div className="scroll-cue">

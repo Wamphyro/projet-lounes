@@ -18,19 +18,21 @@ export const SITE = {
 
 export const SITE_URL = 'https://deka-ceram.web.app';
 
-/** Liens de la navigation (ancres de la mono-page). */
+/** Liens de la navigation (pages du site). */
 export const NAV_LINKS = [
-    { href: '#collections', label: 'Collections' },
-    { href: '#matieres', label: 'Matières' },
-    { href: '#realisations', label: 'Réalisations' },
-    { href: '#showroom', label: 'Showroom' },
+    { href: '/collections/', label: 'Collections' },
+    { href: '/realisations/', label: 'Réalisations' },
+    { href: '/services/', label: 'Services' },
+    { href: '/showroom/', label: 'Showroom' },
 ] as const;
 
-/** Collections — chaque `matiere` correspond à une classe .mat-* (texture CSS). */
+/** Collections mises en avant sur l'accueil — chaque `matiere` correspond à
+    une classe .mat-* (texture CSS), `href` pointe vers la page famille. */
 export type Collection = {
     nom: string;
     sousTitre: string;
     matiere: 'mat-marbre' | 'mat-gres' | 'mat-terrazzo' | 'mat-zellige' | 'mat-pierre';
+    href: string;
     feature?: boolean;
 };
 
@@ -39,12 +41,13 @@ export const COLLECTIONS: Collection[] = [
         nom: 'Grès cérame grand format',
         sousTitre: 'Effet marbre, béton & pierre — jusqu’à 120×280 cm',
         matiere: 'mat-marbre',
+        href: '/collections/gres-cerame/',
         feature: true,
     },
-    { nom: 'Effet marbre foncé', sousTitre: 'Emperador, Sahara Noir', matiere: 'mat-gres' },
-    { nom: 'Terrazzo', sousTitre: 'Éclats de marbre & résine', matiere: 'mat-terrazzo' },
-    { nom: 'Zellige', sousTitre: 'Émaillé à la main, Maroc', matiere: 'mat-zellige' },
-    { nom: 'Pierre de Bourgogne', sousTitre: 'Pierre naturelle & travertin', matiere: 'mat-pierre' },
+    { nom: 'Effet marbre foncé', sousTitre: 'Emperador, Sahara Noir', matiere: 'mat-gres', href: '/collections/gres-cerame/' },
+    { nom: 'Terrazzo', sousTitre: 'Éclats de marbre & résine', matiere: 'mat-terrazzo', href: '/collections/terrazzo/' },
+    { nom: 'Zellige', sousTitre: 'Émaillé à la main, Maroc', matiere: 'mat-zellige', href: '/collections/zellige/' },
+    { nom: 'Pierre de Bourgogne', sousTitre: 'Pierre naturelle & travertin', matiere: 'mat-pierre', href: '/collections/pierre-naturelle/' },
 ];
 
 /** Section « Matière en grand » — liste de specs. */
@@ -63,10 +66,9 @@ export const STATS = [
     { num: '48h', label: 'Délai de devis' },
 ];
 
-/** Réalisations — photos proxy Picsum (seed déterministe), remplacées
-    par les vraies photos du client à la livraison. */
+/** Réalisations mises en avant sur l'accueil (le détail vit dans lib/projets.ts). */
 export const REALISATIONS = [
-    { titre: 'Villa contemporaine', sousTitre: 'Grès effet Calacatta', seed: 'terra-a' },
-    { titre: 'Restaurant', sousTitre: 'Terrazzo & laiton', seed: 'terra-b' },
-    { titre: 'Boutique', sousTitre: 'Pierre de Bourgogne', seed: 'terra-c' },
+    { titre: 'Villa contemporaine', sousTitre: 'Grès effet Calacatta', seed: 'terra-a', href: '/realisations/villa-cote-dor/' },
+    { titre: 'Restaurant', sousTitre: 'Terrazzo & laiton', seed: 'terra-b', href: '/realisations/restaurant-le-comptoir/' },
+    { titre: 'Boutique-hôtel', sousTitre: 'Zellige & marbre', seed: 'terra-c', href: '/realisations/boutique-hotel-remparts/' },
 ];
