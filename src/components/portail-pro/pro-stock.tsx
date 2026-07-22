@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PRODUITS, getFamille, variantesDeProduit, getVariante, conditionnement } from '@/lib/catalogue';
+import { PRODUITS, getFamille, variantesDeProduit, getVariante, conditionnement, aireCarreau } from '@/lib/catalogue';
 import {
     useStock, useReceptions, prochainIdReception,
     stockDuModele, refsEnAlerte, SEUIL_STOCK,
@@ -36,23 +36,34 @@ export function ProStock() {
     const fModeleVariantes = variantesDeProduit(PRODUITS.find((p) => p.slug === fModele)!);
     const [fRef, setFRef] = useState(fModeleVariantes[0].ref);
     const [fPaquets, setFPaquets] = useState('');
+    const [fCarreaux, setFCarreaux] = useState(String(conditionnement(fModeleVariantes[0].format)?.carreaux ?? ''));
     const [fQteM2, setFQteM2] = useState('');
     const [fPrix, setFPrix] = useState('');
     const [fUnite, setFUnite] = useState<'m2' | 'paquet'>('m2');
 
     const vSel = getVariante(fRef)!;
-    const cond = conditionnement(vSel.format);
+    const aire = aireCarreau(vSel.format);
+    const suggestion = conditionnement(vSel.format);
 
-    const changerModele = (slug: string) => {
-        setFModele(slug);
-        setFRef(variantesDeProduit(PRODUITS.find((p) => p.slug === slug)!)[0].ref);
+    const changerRef = (ref: string) => {
+        setFRef(ref);
+        const v = getVariante(ref)!;
+        setFCarreaux(String(conditionnement(v.format)?.carreaux ?? ''));
         setFPaquets(''); setFQteM2(''); setFUnite('m2');
     };
 
-    /* Quantité et prix de la ligne en cours (aperçu avant ajout). */
+    const changerModele = (slug: string) => {
+        setFModele(slug);
+        changerRef(variantesDeProduit(PRODUITS.find((p) => p.slug === slug)!)[0].ref);
+    };
+
+    /* Conditionnement CHOISI : carreaux/paquet modifiable (varie par fournisseur),
+       m²/paquet recalculé depuis l'aire du carreau. */
     const num = (s: string) => parseFloat(s.replace(',', '.')) || 0;
-    const ligneM2 = cond ? Math.round(num(fPaquets) * cond.m2 * 100) / 100 : num(fQteM2);
-    const lignePrixM2 = fUnite === 'paquet' && cond ? (num(fPrix) > 0 ? Math.round((num(fPrix) / cond.m2) * 100) / 100 : 0) : num(fPrix);
+    const carreauxChoisis = aire ? Math.max(0, Math.floor(num(fCarreaux))) : 0;
+    const m2Paquet = aire && carreauxChoisis > 0 ? Math.round(carreauxChoisis * aire * 10000) / 10000 : null;
+    const ligneM2 = m2Paquet ? Math.round(num(fPaquets) * m2Paquet * 100) / 100 : num(fQteM2);
+    const lignePrixM2 = fUnite === 'paquet' && m2Paquet ? (num(fPrix) > 0 ? Math.round((num(fPrix) / m2Paquet) * 100) / 100 : 0) : num(fPrix);
     const ligneMontant = Math.round(ligneM2 * lignePrixM2);
 
     const ajouterLigne = () => {
@@ -61,7 +72,8 @@ export function ProStock() {
         const ligne: LigneReception = {
             ref: fRef,
             nom: `${p.nom} · ${vSel.couleur} · ${vSel.format}`,
-            paquets: cond ? num(fPaquets) : null,
+            paquets: m2Paquet ? num(fPaquets) : null,
+            carreauxParPaquet: m2Paquet ? carreauxChoisis : null,
             quantite: ligneM2,
             prixM2: lignePrixM2,
             montant: ligneMontant,
@@ -161,17 +173,23 @@ export function ProStock() {
                         </div>
                         <div className="field" style={{ flex: 2, minWidth: 210 }}>
                             <label htmlFor="bl-ref">Référence (couleur · format)</label>
-                            <select id="bl-ref" value={fRef} onChange={(e) => { setFRef(e.target.value); setFPaquets(''); setFQteM2(''); }}>
+                            <select id="bl-ref" value={fRef} onChange={(e) => changerRef(e.target.value)}>
                                 {fModeleVariantes.map((v) => (
                                     <option key={v.ref} value={v.ref}>{v.ref} — {v.couleur} · {v.format}</option>
                                 ))}
                             </select>
                         </div>
-                        {cond ? (
-                            <div className="field" style={{ width: 120 }}>
-                                <label htmlFor="bl-paquets">Nb de paquets</label>
-                                <input id="bl-paquets" type="number" min="0" step="1" value={fPaquets} onChange={(e) => setFPaquets(e.target.value)} />
-                            </div>
+                        {aire ? (
+                            <>
+                                <div className="field" style={{ width: 130 }}>
+                                    <label htmlFor="bl-crx">Carreaux / paquet</label>
+                                    <input id="bl-crx" type="number" min="1" step="1" value={fCarreaux} onChange={(e) => setFCarreaux(e.target.value)} />
+                                </div>
+                                <div className="field" style={{ width: 120 }}>
+                                    <label htmlFor="bl-paquets">Nb de paquets</label>
+                                    <input id="bl-paquets" type="number" min="0" step="1" value={fPaquets} onChange={(e) => setFPaquets(e.target.value)} />
+                                </div>
+                            </>
                         ) : (
                             <div className="field" style={{ width: 120 }}>
                                 <label htmlFor="bl-m2">Quantité m²</label>
@@ -186,7 +204,7 @@ export function ProStock() {
                             <label htmlFor="bl-unite">Unité du prix</label>
                             <select id="bl-unite" value={fUnite} onChange={(e) => setFUnite(e.target.value as 'm2' | 'paquet')}>
                                 <option value="m2">€ / m²</option>
-                                {cond && <option value="paquet">€ / paquet</option>}
+                                {m2Paquet && <option value="paquet">€ / paquet</option>}
                             </select>
                         </div>
                         <button className="btn dark" onClick={ajouterLigne} disabled={ligneM2 <= 0 || lignePrixM2 <= 0} style={{ marginBottom: 2 }}>
@@ -196,9 +214,16 @@ export function ProStock() {
 
                     {/* Aperçu conditionnement + conversion de la ligne en cours */}
                     <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 10 }}>
-                        {cond
-                            ? <>Conditionnement {vSel.ref} : <b>{cond.carreaux} carreau{cond.carreaux > 1 ? 'x' : ''} / paquet = {cond.m2} m²</b>.</>
-                            : <>Format « {vSel.format} » vendu au m² (pas de paquet standard).</>}
+                        {aire ? (
+                            m2Paquet ? (
+                                <>Conditionnement choisi : <b>{carreauxChoisis} carreau{carreauxChoisis > 1 ? 'x' : ''} / paquet = {Math.round(m2Paquet * 100) / 100} m²</b>
+                                {suggestion && carreauxChoisis !== suggestion.carreaux ? <> (standard : {suggestion.carreaux})</> : null}.</>
+                            ) : (
+                                <>Indiquez le nombre de carreaux par paquet (celui du fournisseur, sur le BL).</>
+                            )
+                        ) : (
+                            <>Format « {vSel.format} » vendu au m² (pas de paquet standard).</>
+                        )}
                         {ligneM2 > 0 && lignePrixM2 > 0 && (
                             <> &nbsp;→&nbsp; <b>{ligneM2} m²</b> à <b>{lignePrixM2} €/m²</b> = <b>{ligneMontant.toLocaleString('fr-FR')} € HT</b></>
                         )}
@@ -214,7 +239,7 @@ export function ProStock() {
                                     <tr key={l.ref}>
                                         <td style={{ fontWeight: 600 }}>{l.ref}</td>
                                         <td>{l.nom}</td>
-                                        <td>{l.paquets ?? '—'}</td>
+                                        <td>{l.paquets ? `${l.paquets}${l.carreauxParPaquet ? ` × ${l.carreauxParPaquet} crx` : ''}` : '—'}</td>
                                         <td>{l.quantite}</td>
                                         <td>{l.prixM2}</td>
                                         <td style={{ textAlign: 'right' }}>{l.montant.toLocaleString('fr-FR')} €</td>
@@ -283,7 +308,7 @@ export function ProStock() {
                     <div className="table-scroll" style={{ marginTop: 16 }}>
                         <table className="data-table">
                             <thead>
-                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Conditionnement</th><th>Stock (m²)</th><th>État</th></tr>
+                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Cond. standard</th><th>Stock (m²)</th><th>État</th></tr>
                             </thead>
                             <tbody>
                                 {selVariantes.map((v) => {

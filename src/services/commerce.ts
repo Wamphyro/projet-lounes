@@ -189,6 +189,7 @@ export type LigneReception = {
     ref: string;
     nom: string;
     paquets: number | null;
+    carreauxParPaquet?: number | null; // conditionnement réel du fournisseur
     quantite: number;   // m² reçus
     prixM2: number;     // prix d'achat ramené au m² (HT)
     montant: number;    // total ligne (HT)
