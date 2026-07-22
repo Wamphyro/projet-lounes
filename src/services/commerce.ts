@@ -137,6 +137,31 @@ const DEMANDES_SEED: Demande[] = [
     { id: 'DEM-111', type: 'Devis', contact: 'SCI Les Remparts — contact@remparts.fr', detail: 'Projet pro : 12 salles d’eau, marbre + zellige', date: '19/07/2026', traitee: true },
 ];
 
+/** Réception de stock (bon de livraison fournisseur). */
+export type LigneReception = { slug: string; nom: string; quantite: number };
+export type Reception = {
+    id: string;
+    bl: string;
+    fournisseur: string;
+    date: string;
+    mode: 'Saisie manuelle' | 'Analyse IA';
+    lignes: LigneReception[];
+};
+
+const RECEPTIONS_SEED: Reception[] = [
+    {
+        id: 'REC-041',
+        bl: 'BL-20260718-114',
+        fournisseur: 'Ceramiche Adriatica (Italie)',
+        date: '18/07/2026',
+        mode: 'Saisie manuelle',
+        lignes: [
+            { slug: 'calacatta-oro', nom: 'Calacatta Oro', quantite: 120 },
+            { slug: 'terrazzo-venezia', nom: 'Terrazzo Venezia', quantite: 80 },
+        ],
+    },
+];
+
 export const STOCK_INITIAL: Record<string, number> = {
     'calacatta-oro': 264, 'sahara-noir': 92, 'beton-cire-taupe': 540, 'travertin-navona': 318,
     'zellige-blanc-neige': 74, 'zellige-vert-emeraude': 12, 'zellige-bleu-majorelle': 28, 'zellige-terre-cuite': 66,
@@ -188,6 +213,13 @@ export const useDevis = () => useCollection<Devis[]>('dc-devis', DEVIS_SEED);
 export const useCommandes = () => useCollection<Commande[]>('dc-commandes', COMMANDES_SEED);
 export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDES_SEED);
 export const useStock = () => useCollection<Record<string, number>>('dc-stock', STOCK_INITIAL);
+export const useReceptions = () => useCollection<Reception[]>('dc-receptions', RECEPTIONS_SEED);
+
+/** Prochain numéro de réception (REC-XXX). */
+export const prochainIdReception = (receptions: Reception[]) => {
+    const max = receptions.reduce((m, r) => Math.max(m, parseInt(r.id.replace('REC-', ''), 10) || 0), 40);
+    return `REC-${String(max + 1).padStart(3, '0')}`;
+};
 
 /** Prochain numéro de devis (DEV-XXXX). */
 export const prochainIdDevis = (devis: Devis[]) => {
