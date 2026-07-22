@@ -1,0 +1,364 @@
+/* ============================================================
+   TERRA — Feuille de style globale
+   1. Tokens de design (re-brandables en un point — ne jamais
+      coder une couleur en dur ailleurs)
+   ============================================================ */
+:root {
+    /* — Couleurs — palette chaude, sans gris froid — */
+    --noir:        #171310;   /* brun-noir chaud (moments sombres) */
+    --noir-2:      #221C16;   /* variante des blocs sombres */
+    --creme:       #F7F2E9;   /* fond clair principal */
+    --creme-2:     #FBF8F1;   /* crème le plus clair (cartes, respirations) */
+    --sable:       #EFE7D7;   /* fond alternatif chaud */
+    --ambre:       #C0852B;   /* accent principal (or/ambre) */
+    --ambre-clair: #E0A94A;   /* accent lumineux (dégradés, hover) */
+    --ambre-fonce: #9A6A1D;   /* ambre profond */
+    --encre:       #2A241D;   /* texte principal (brun très foncé, pas noir pur) */
+    --taupe:       #857A6A;   /* texte secondaire */
+    --ligne:       rgba(42, 36, 29, .12);      /* filets sur clair */
+    --ligne-dark:  rgba(247, 242, 233, .14);   /* filets sur sombre */
+
+    /* — Typographie — Fraunces auto-hébergée par next/font (layout.tsx) — */
+    --serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+    --sans:  -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
+             system-ui, "Helvetica Neue", Arial, sans-serif;
+
+    /* — Rythme & formes — */
+    --pad-section: clamp(78px, 11vw, 160px);
+    --rayon:       22px;
+    --rayon-lg:    32px;
+    --max:         1240px;
+}
+
+/* ============================================================
+   2. Reset & bases
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+    font-family: var(--sans);
+    background: var(--creme);
+    color: var(--encre);
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+a { color: inherit; text-decoration: none; }
+
+/* Focus clavier visible (plancher qualité) */
+:focus-visible { outline: 2px solid var(--ambre); outline-offset: 3px; border-radius: 4px; }
+
+.wrap { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: 24px; }
+
+/* Petit libellé en capitales espacées, au-dessus des titres */
+.eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: .24em;
+    text-transform: uppercase; color: var(--ambre);
+}
+
+/* Grain fin sur toute la page — texture « matière », rendu premium */
+body::before {
+    content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    opacity: .05; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   3. Navigation (transparente sur le hero, floutée au scroll)
+   ============================================================ */
+.nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    transition: background .4s ease, backdrop-filter .4s ease, border-color .4s ease;
+    border-bottom: 1px solid transparent;
+}
+/* Au démarrage : texte foncé lisible sur le hero sable */
+.nav .brand { font-family: var(--serif); font-size: 23px; font-weight: 600; letter-spacing: .04em; color: var(--encre); transition: color .4s ease; }
+.nav .brand span { color: var(--ambre); }
+.nav-links { display: flex; gap: 34px; list-style: none; }
+.nav-links a { font-size: 14px; font-weight: 500; color: rgba(42, 36, 29, .72); transition: color .2s ease; }
+.nav-links a:hover { color: var(--encre); }
+
+/* Une fois scrollé : barre crème floutée */
+.nav.is-scrolled {
+    background: rgba(247, 242, 233, .78);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--ligne);
+}
+
+/* Boutons (button ou lien-ancre) */
+.btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 600; padding: 11px 22px;
+    border-radius: 100px; background: var(--ambre); color: #fff;
+    border: none; cursor: pointer;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+    box-shadow: 0 6px 20px rgba(192, 133, 43, .28);
+}
+.btn:hover { background: var(--ambre-clair); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(192, 133, 43, .34); }
+.btn.ghost { background: transparent; color: var(--creme); border: 1px solid var(--ligne-dark); box-shadow: none; }
+.btn.ghost:hover { background: rgba(247, 242, 233, .08); }
+.btn.dark { background: var(--encre); color: var(--creme); box-shadow: none; }
+.btn.dark:hover { background: var(--noir-2); }
+
+/* Menu mobile */
+.burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; }
+.burger span { width: 22px; height: 2px; background: var(--encre); border-radius: 2px; transition: .3s; }
+.mobile-menu {
+    position: fixed; inset: 0; z-index: 99;
+    background: rgba(23, 19, 16, .97); backdrop-filter: blur(24px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+    opacity: 0; pointer-events: none; transition: opacity .35s ease;
+}
+.mobile-menu.open { opacity: 1; pointer-events: auto; }
+.mobile-menu a { font-family: var(--serif); font-size: 32px; color: var(--creme); }
+.mobile-menu a:hover { color: var(--ambre-clair); }
+
+/* ============================================================
+   4. Bibliothèque de matières (textures 100 % CSS)
+   — élément signature : fiable, sans image externe
+   ============================================================ */
+
+/* Marbre Calacatta — fond clair veiné d'ambre */
+.mat-marbre {
+    background:
+        linear-gradient(118deg, transparent 44%, rgba(154, 106, 29, .30) 45%, transparent 46%),
+        linear-gradient(126deg, transparent 63%, rgba(133, 122, 106, .28) 64%, transparent 66%),
+        linear-gradient(100deg, transparent 28%, rgba(192, 133, 43, .16) 29%, transparent 30%),
+        radial-gradient(130% 100% at 15% 0%, #ffffff, #f3ecdd 55%, #e7dcc6);
+}
+/* Grès grand format effet marbre foncé */
+.mat-gres {
+    background:
+        linear-gradient(120deg, transparent 40%, rgba(224, 169, 74, .22) 41%, transparent 43%),
+        linear-gradient(150deg, transparent 66%, rgba(247, 242, 233, .14) 67%, transparent 69%),
+        radial-gradient(120% 100% at 80% 10%, #3a2f22, #241c14 60%, #171310);
+}
+/* Terrazzo — crème parsemé d'éclats */
+.mat-terrazzo {
+    background-color: #efe7d6;
+    background-image:
+        radial-gradient(circle at 18% 28%, var(--ambre) 0 6px, transparent 7px),
+        radial-gradient(circle at 68% 18%, var(--encre) 0 5px, transparent 6px),
+        radial-gradient(circle at 42% 68%, var(--ambre-fonce) 0 7px, transparent 8px),
+        radial-gradient(circle at 86% 62%, var(--taupe) 0 5px, transparent 6px),
+        radial-gradient(circle at 56% 42%, var(--encre) 0 4px, transparent 5px),
+        radial-gradient(circle at 12% 78%, var(--ambre) 0 5px, transparent 6px),
+        radial-gradient(circle at 92% 90%, var(--ambre-fonce) 0 6px, transparent 7px),
+        radial-gradient(circle at 33% 92%, var(--taupe) 0 4px, transparent 5px);
+    background-size: 150px 150px;
+}
+/* Zellige — carreaux émaillés brillants */
+.mat-zellige {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, .30), transparent 55%),
+        repeating-linear-gradient(0deg, rgba(23, 19, 16, .35) 0 1px, transparent 1px 36px),
+        repeating-linear-gradient(90deg, rgba(23, 19, 16, .35) 0 1px, transparent 1px 36px),
+        linear-gradient(160deg, var(--ambre-clair), var(--ambre-fonce));
+    background-size: cover, 36px 36px, 36px 36px, cover;
+}
+/* Pierre de Bourgogne — beige pierre mouchetée */
+.mat-pierre {
+    background:
+        radial-gradient(55% 40% at 25% 28%, rgba(255, 255, 255, .4), transparent),
+        radial-gradient(50% 50% at 78% 72%, rgba(133, 122, 106, .32), transparent),
+        radial-gradient(40% 40% at 60% 40%, rgba(154, 106, 29, .14), transparent),
+        linear-gradient(135deg, #e6d9bf, #cdbb98);
+}
+
+/* ============================================================
+   5. Hero (scène claire & chaude, texte foncé)
+   ============================================================ */
+.hero {
+    position: relative; min-height: 100vh;
+    display: flex; align-items: center; overflow: hidden;
+    background:
+        radial-gradient(70% 60% at 78% 15%, rgba(224, 169, 74, .20), transparent 60%),
+        radial-gradient(60% 60% at 10% 95%, rgba(192, 133, 43, .10), transparent 60%),
+        var(--sable);
+}
+/* Grande veine de marbre en filigrane derrière le titre */
+.hero::before {
+    content: ""; position: absolute; inset: 0; z-index: 0; opacity: .5;
+    background:
+        linear-gradient(115deg, transparent 47%, rgba(154, 106, 29, .18) 48%, transparent 49%),
+        linear-gradient(128deg, transparent 64%, rgba(133, 122, 106, .14) 65%, transparent 67%),
+        linear-gradient(104deg, transparent 30%, rgba(192, 133, 43, .12) 31%, transparent 32%);
+}
+.hero-inner { position: relative; z-index: 2; max-width: 900px; padding-top: 70px; }
+.hero h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(48px, 8.4vw, 112px); line-height: .96;
+    letter-spacing: -0.025em; margin: 24px 0 26px;
+}
+.hero h1 em { font-style: italic; color: var(--ambre); }
+.hero p { font-size: clamp(17px, 2.2vw, 22px); max-width: 540px; color: var(--taupe); margin-bottom: 36px; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero-actions .btn.ghost { color: var(--encre); border-color: var(--ligne); }
+.hero-actions .btn.ghost:hover { background: rgba(42, 36, 29, .05); }
+
+.scroll-cue {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2;
+    font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--taupe);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.scroll-cue .line { width: 1px; height: 40px; background: var(--taupe); opacity: .5; animation: cue 2s ease-in-out infinite; }
+@keyframes cue { 0%, 100% { transform: scaleY(.4); opacity: .35 } 50% { transform: scaleY(1); opacity: .8 } }
+
+/* ============================================================
+   6. Manifeste
+   ============================================================ */
+.manifeste { padding: var(--pad-section) 0; text-align: center; }
+.manifeste p {
+    font-family: var(--serif); font-size: clamp(27px, 4vw, 48px);
+    line-height: 1.18; letter-spacing: -0.01em; max-width: 920px; margin-inline: auto;
+}
+.manifeste p b { color: var(--ambre); font-weight: 600; }
+
+/* ============================================================
+   7. Structure de section
+   ============================================================ */
+.section { padding: var(--pad-section) 0; }
+.section.creme2 { background: var(--creme-2); }
+
+.section-head { max-width: 660px; margin-bottom: 56px; }
+.section-head h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(33px, 5vw, 58px); line-height: 1.04;
+    letter-spacing: -0.02em; margin: 14px 0 16px;
+}
+.section-head p { color: var(--taupe); font-size: 17px; max-width: 520px; }
+
+/* ============================================================
+   8. Collections (grille de matières CSS)
+   ============================================================ */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.card {
+    position: relative; border-radius: var(--rayon); overflow: hidden;
+    aspect-ratio: 3 / 4; cursor: pointer;
+    transition: transform .5s cubic-bezier(.2, .7, .2, 1), box-shadow .5s ease;
+    box-shadow: 0 1px 0 var(--ligne);
+}
+.card:hover { transform: translateY(-6px); box-shadow: 0 24px 50px rgba(42, 36, 29, .16); }
+.card .surface { position: absolute; inset: 0; transition: transform .8s cubic-bezier(.2, .7, .2, 1); }
+.card:hover .surface { transform: scale(1.05); }
+/* Voile bas pour lisibilité de la légende */
+.card::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 42%, rgba(23, 19, 16, .72) 100%);
+}
+.card .caption { position: absolute; z-index: 2; left: 22px; right: 22px; bottom: 20px; color: var(--creme); }
+.card .caption h3 { font-family: var(--serif); font-size: 24px; font-weight: 500; }
+.card .caption span { font-size: 13px; color: rgba(247, 242, 233, .74); }
+.card.feature { grid-column: span 2; aspect-ratio: auto; }
+
+/* ============================================================
+   9. Matière en grand (média + texte)
+   ============================================================ */
+.split { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: clamp(32px, 6vw, 92px); }
+.split .media { border-radius: var(--rayon-lg); overflow: hidden; aspect-ratio: 4 / 5; box-shadow: 0 30px 60px rgba(42, 36, 29, .14); }
+.split h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(31px, 4.4vw, 54px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 20px; }
+.split p { color: var(--taupe); font-size: 17px; margin-bottom: 18px; max-width: 460px; }
+.speclist { list-style: none; margin: 26px 0 30px; }
+.speclist li { display: flex; gap: 12px; align-items: baseline; padding: 13px 0; border-top: 1px solid var(--ligne); font-size: 15px; }
+.speclist li::before { content: "—"; color: var(--ambre); font-weight: 600; }
+
+/* ============================================================
+   10. Citation plein cadre (1er des deux moments sombres)
+   ============================================================ */
+.quote {
+    position: relative; min-height: 74vh;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--creme); overflow: hidden; background: var(--noir);
+}
+/* Fond : photo proxy + repli dégradé si elle ne charge pas */
+.quote-bg { position: absolute; inset: 0; z-index: 0; background: linear-gradient(135deg, var(--noir-2), var(--noir)); }
+.quote-bg img { opacity: .5; mix-blend-mode: luminosity; }
+.quote-bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(80% 80% at 50% 40%, rgba(192, 133, 43, .28), transparent 60%), rgba(23, 19, 16, .55);
+}
+.quote blockquote {
+    position: relative; z-index: 2;
+    font-family: var(--serif); font-size: clamp(29px, 4.6vw, 62px); font-weight: 400; font-style: italic;
+    line-height: 1.14; letter-spacing: -0.01em; max-width: 920px; padding-inline: 24px;
+}
+.quote cite { display: block; font-family: var(--sans); font-style: normal; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--ambre-clair); margin-top: 28px; }
+
+/* ============================================================
+   11. Réalisations + chiffres
+   ============================================================ */
+.photo { position: relative; overflow: hidden; background: linear-gradient(135deg, var(--noir-2), var(--noir)); }
+.photo img { transition: transform .8s cubic-bezier(.2, .7, .2, 1); }
+.card:hover .photo img { transform: scale(1.05); }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 64px; }
+.stat { text-align: center; padding: 20px 0; }
+.stat .num { font-family: var(--serif); font-size: clamp(46px, 6vw, 80px); line-height: 1; color: var(--ambre); }
+.stat .label { font-size: 14px; color: var(--taupe); margin-top: 12px; }
+
+/* ============================================================
+   12. Showroom / RDV (2e moment sombre)
+   ============================================================ */
+.cta-block {
+    position: relative; overflow: hidden; text-align: center;
+    background: linear-gradient(160deg, var(--noir-2), var(--noir));
+    border-radius: var(--rayon-lg); color: var(--creme);
+    padding: clamp(52px, 8vw, 100px);
+}
+.cta-block::before {
+    content: ""; position: absolute; top: -40%; left: 50%; transform: translateX(-50%);
+    width: 120%; height: 120%;
+    background: radial-gradient(circle, rgba(192, 133, 43, .26), transparent 55%);
+}
+.cta-block h2 { position: relative; font-family: var(--serif); font-weight: 400; font-size: clamp(35px, 5.5vw, 70px); line-height: 1.02; letter-spacing: -0.02em; margin-bottom: 20px; }
+.cta-block p { position: relative; color: rgba(247, 242, 233, .72); font-size: 18px; max-width: 480px; margin: 0 auto 34px; }
+.cta-actions { position: relative; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+/* ============================================================
+   13. Pied de page
+   ============================================================ */
+.footer { background: var(--sable); padding: 72px 0 40px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 48px; border-bottom: 1px solid var(--ligne); }
+.footer .brand { font-family: var(--serif); font-size: 27px; font-weight: 600; }
+.footer .brand span { color: var(--ambre); }
+.footer .tag { color: var(--taupe); font-size: 15px; margin-top: 12px; max-width: 260px; }
+.footer h4 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--taupe); margin-bottom: 16px; }
+.footer ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.footer ul a { font-size: 15px; opacity: .8; }
+.footer ul a:hover { opacity: 1; color: var(--ambre); }
+.footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 28px; font-size: 13px; color: var(--taupe); flex-wrap: wrap; gap: 12px; }
+
+/* ============================================================
+   14. Révélation au scroll ([data-reveal] + .is-visible,
+       même convention que le site Nexio Audition)
+   ============================================================ */
+[data-reveal] { opacity: 0; transform: translateY(28px); transition: opacity .8s ease, transform .8s ease; }
+[data-reveal].is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    [data-reveal] { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+}
+
+/* ============================================================
+   15. Responsive
+   ============================================================ */
+@media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .card.feature { grid-column: span 2; }
+    .split { grid-template-columns: 1fr; }
+    .split .media { aspect-ratio: 16 / 11; order: -1; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+    .nav-links, .nav > .btn { display: none; }
+    .burger { display: flex; }
+    .grid { grid-template-columns: 1fr; }
+    .card, .card.feature { grid-column: auto; aspect-ratio: 3/4; }
+    .footer-grid { grid-template-columns: 1fr; }
+}
