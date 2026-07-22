@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { PageHero } from '@/components/page-hero';
-import { ProxyImg } from '@/components/proxy-img';
 import { SITE } from '@/lib/site-config';
 
 export const metadata: Metadata = {
@@ -50,8 +50,14 @@ export default function ShowroomPage() {
 
             <section className="section">
                 <div className="wrap split" data-reveal>
-                    <div className="media photo" style={{ borderRadius: 'var(--rayon-lg)', overflow: 'hidden', aspectRatio: '4 / 5', boxShadow: '0 30px 60px rgba(42,36,29,.14)' }}>
-                        <ProxyImg seed="terra-showroom" w={900} h={1125} alt="Le showroom DEKA CÉRAM" />
+                    <div className="media" style={{ borderRadius: 'var(--rayon-lg)', overflow: 'hidden', boxShadow: '0 30px 60px rgba(42,36,29,.18)' }}>
+                        <Image
+                            src="/images/showroom-facade.jpg"
+                            alt="La façade du showroom DEKA CÉRAM, enseigne rétroéclairée à la tombée du jour"
+                            width={1400}
+                            height={1568}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                     </div>
                     <div>
                         <span className="eyebrow">Infos pratiques</span>

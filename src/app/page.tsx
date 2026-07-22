@@ -4,6 +4,7 @@ import { CollectionGrid } from '@/components/collection-grid';
 import { Split } from '@/components/split';
 import { Quote } from '@/components/quote';
 import { Realisations } from '@/components/realisations';
+import { ShowroomTeaser } from '@/components/showroom-teaser';
 import { Testimonials } from '@/components/testimonials';
 import { GuideTeaser } from '@/components/guide-teaser';
 import { CtaBlock } from '@/components/cta-block';
@@ -22,6 +23,7 @@ export default function Home() {
             <Split />
             <Quote />
             <Realisations />
+            <ShowroomTeaser />
             <Testimonials />
             <GuideTeaser />
             <CtaBlock />
