@@ -142,6 +142,32 @@ const DEMANDES_SEED: Demande[] = [
     { id: 'DEM-111', type: 'Devis', contact: 'SCI Les Remparts — contact@remparts.fr', detail: 'Projet pro : 12 salles d’eau, marbre + zellige', date: '19/07/2026', traitee: true },
 ];
 
+/** Compte client — le rattachement des devis/commandes/factures se fait par
+    nom en démo ; le backend utilisera l'identifiant (clientId sur chaque doc). */
+export type TypeClient = 'Particulier' | 'Professionnel';
+export type Client = {
+    id: string;
+    nom: string;
+    type: TypeClient;
+    email: string;
+    tel: string;
+    adresse: string;
+    notes?: string;
+    creeLe: string;
+};
+
+const CLIENTS_SEED: Client[] = [
+    { id: 'CLI-101', nom: 'Julie Morel', type: 'Particulier', email: 'client@demo.fr', tel: '06 12 34 56 78', adresse: '4 rue des Tanneurs, 21000 Dijon', notes: 'Projet salle de bain + crédence cuisine. Compte de démonstration de l’espace client.', creeLe: '02/07/2026' },
+    { id: 'CLI-102', nom: 'M. et Mme Perrin', type: 'Particulier', email: 'perrin.famille@mail.fr', tel: '06 22 33 44 55', adresse: '18 chemin des Vignes, 21200 Beaune', creeLe: '10/07/2026' },
+    { id: 'CLI-103', nom: 'SARL Bâti-Sud (pro)', type: 'Professionnel', email: 'contact@batisud.fr', tel: '03 80 11 22 33', adresse: 'ZA des Charrières, 21300 Chenôve', notes: 'Compte pro — chantiers réguliers, conditions négociées.', creeLe: '05/07/2026' },
+    { id: 'CLI-104', nom: 'Mme Lefèvre', type: 'Particulier', email: 'c.lefevre@mail.fr', tel: '06 45 67 89 01', adresse: '7 rue de la Liberté, 21000 Dijon', creeLe: '15/07/2026' },
+    { id: 'CLI-105', nom: 'Restaurant Le Comptoir', type: 'Professionnel', email: 'gerant@lecomptoir-dijon.fr', tel: '03 80 44 55 66', adresse: '12 place Émile Zola, 21000 Dijon', notes: 'Sol terrazzo posé en 2025 — client référence (témoignage site).', creeLe: '03/07/2026' },
+    { id: 'CLI-106', nom: 'M. Roussel', type: 'Particulier', email: 'roussel@mail.fr', tel: '06 78 90 12 34', adresse: '3 impasse des Acacias, 71000 Mâcon', creeLe: '08/07/2026' },
+    { id: 'CLI-107', nom: 'Atelier Verne (architecte)', type: 'Professionnel', email: 'agence@atelierverne.fr', tel: '03 80 77 88 99', adresse: '25 rue Chabot-Charny, 21000 Dijon', notes: 'Prescripteur — envoie régulièrement ses clients au showroom.', creeLe: '06/07/2026' },
+    { id: 'CLI-108', nom: 'Boulangerie Aux Blés d’Or', type: 'Professionnel', email: 'contact@auxblesdor.fr', tel: '03 80 33 22 11', adresse: '9 rue Monge, 21000 Dijon', creeLe: '07/07/2026' },
+    { id: 'CLI-109', nom: 'SCI Les Remparts', type: 'Professionnel', email: 'contact@remparts.fr', tel: '03 80 55 44 33', adresse: '2 rempart Saint-Jean, 21200 Beaune', notes: 'Projet 12 salles d’eau — demande de devis en cours.', creeLe: '19/07/2026' },
+];
+
 /** Facture — issue de la transformation d'un devis accepté (1 devis → 1 facture). */
 export type FactureStatut = 'À régler' | 'Réglée';
 export type Facture = {
@@ -288,6 +314,13 @@ export const useStock = () => useCollection<Record<string, number>>('dc-stock-v2
 export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v3', RECEPTIONS_SEED);
 export const useRdv = () => useCollection<Rdv[]>('dc-rdv', RDV_SEED);
 export const useFactures = () => useCollection<Facture[]>('dc-factures', FACTURES_SEED);
+export const useClients = () => useCollection<Client[]>('dc-clients', CLIENTS_SEED);
+
+/** Prochain numéro de compte client (CLI-XXX). */
+export const prochainIdClient = (clients: Client[]) => {
+    const max = clients.reduce((m, c) => Math.max(m, parseInt(c.id.replace('CLI-', ''), 10) || 0), 100);
+    return `CLI-${max + 1}`;
+};
 
 /** Prochain numéro de facture (FAC-XXXX). */
 export const prochainIdFacture = (factures: Facture[]) => {

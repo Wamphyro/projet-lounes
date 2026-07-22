@@ -43,8 +43,8 @@ export function ProDevis() {
     const majStatut = (id: string, statut: DevisStatut) =>
         setDevis(devis.map((d) => (d.id === id ? { ...d, statut } : d)));
 
-    /* ——— Formulaire de création ——— */
-    const [fClient, setFClient] = useState('');
+    /* ——— Formulaire de création (client pré-rempli depuis une fiche client) ——— */
+    const [fClient, setFClient] = useState(params.get('client') ?? '');
     const [fEmail, setFEmail] = useState('');
     const [fRemise, setFRemise] = useState('0');
     const [fNotes, setFNotes] = useState('');
