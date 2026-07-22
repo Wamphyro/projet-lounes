@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PRODUITS, getProduit, getFamille, produitsDeFamille } from '@/lib/catalogue';
-import { ProductCard } from '@/components/product-card';
-import { Calculator } from '@/components/calculator';
-import { SITE } from '@/lib/site-config';
+import { ProductCard } from '@/components/site/product-card';
+import { Calculator } from '@/components/site/calculator';
+import { AddToPanier } from '@/components/site/add-to-panier';
 
 export function generateStaticParams() {
     return PRODUITS.map((p) => ({ slug: p.slug }));
@@ -21,8 +21,6 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
     if (!p) notFound();
     const famille = getFamille(p.famille)!;
     const suggestions = produitsDeFamille(p.famille).filter((x) => x.slug !== p.slug).slice(0, 3);
-
-    const sujetEchantillon = encodeURIComponent(`Demande d'échantillon — ${p.nom}`);
 
     return (
         <>
@@ -71,12 +69,7 @@ export default async function ProduitPage({ params }: { params: Promise<{ slug: 
                                 {p.pieces.map((piece) => <span key={piece} className="tag">{piece}</span>)}
                             </div>
 
-                            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                                <a href={`mailto:${SITE.email}?subject=${sujetEchantillon}`} className="btn">
-                                    Demander un échantillon
-                                </a>
-                                <Link href="/devis/" className="btn dark">Obtenir un devis</Link>
-                            </div>
+                            <AddToPanier slug={p.slug} nom={p.nom} prix={p.prix} />
                         </div>
                     </div>
                 </div>

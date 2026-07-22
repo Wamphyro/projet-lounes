@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { SITE } from '@/lib/site-config';
-import facade from '../../public/images/showroom-facade.jpg';
+import facade from '../../../public/images/showroom-facade.jpg';
 
 /**
  * Section showroom de l'accueil — la façade du local en valeur (vraie photo),

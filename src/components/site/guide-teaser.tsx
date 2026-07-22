@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ARTICLES } from '@/lib/articles';
-import { ArticleCard } from '@/components/article-card';
+import { ArticleCard } from '@/components/site/article-card';
 
 /** Teaser du Guide sur l'accueil — 3 articles + lien vers le hub. */
 export function GuideTeaser() {

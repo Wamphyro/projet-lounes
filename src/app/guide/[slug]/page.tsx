@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ARTICLES, getArticle } from '@/lib/articles';
-import { ArticleCard } from '@/components/article-card';
+import { ArticleCard } from '@/components/site/article-card';
 
 export function generateStaticParams() {
     return ARTICLES.map((a) => ({ slug: a.slug }));

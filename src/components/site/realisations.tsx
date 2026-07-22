@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { REALISATIONS } from '@/lib/site-config';
 import { PROJET_PHOTOS } from '@/lib/projet-photos';
-import { Stats } from '@/components/stats';
+import { Stats } from '@/components/site/stats';
 
 /** Réalisations (accueil) — 3 projets mis en avant + chiffres clés. */
 export function Realisations() {

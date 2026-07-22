@@ -6,8 +6,9 @@ composants), re-brandé à l'enseigne réelle.
 
 **Site en ligne : https://wamphyro.github.io/projet-lounes/**
 
-- **Stack** : Next.js (App Router, export statique), organisation calquée sur le site
-  Nexio Audition (`src/app`, `src/components`, `src/lib`).
+- **Stack** : Next.js (App Router, export statique). Trois produits cloisonnés dans le
+  même repo : site vitrine, portail client (`/espace-client`) et portail collaborateur
+  (`/espace-pro`) — architecture SSOT détaillée dans [src/README.md](src/README.md).
 - **Design** : tokens CSS centralisés dans `src/app/globals.css` (palette chaude
   crème/brun-noir/ambre, Fraunces en titres). Les vignettes « Collections » sont des
   matières générées 100 % en CSS (classes `.mat-*`) — élément signature à conserver.

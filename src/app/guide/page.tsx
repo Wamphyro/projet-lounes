@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { PageHero } from '@/components/page-hero';
-import { GuideFilters } from '@/components/guide-filters';
+import { PageHero } from '@/components/shared/page-hero';
+import { GuideFilters } from '@/components/site/guide-filters';
 import { ARTICLES, CATEGORIES } from '@/lib/articles';
 
 export const metadata: Metadata = {

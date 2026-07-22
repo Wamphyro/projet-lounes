@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { PageHero } from '@/components/page-hero';
-import { ProductFilters } from '@/components/product-filters';
+import { PageHero } from '@/components/shared/page-hero';
+import { ProductFilters } from '@/components/site/product-filters';
 import { FAMILLES, getFamille, produitsDeFamille, piecesDeFamille } from '@/lib/catalogue';
 
 export function generateStaticParams() {

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Fraunces } from 'next/font/google';
 import './globals.css';
-import { Nav } from '@/components/nav';
-import { Footer } from '@/components/footer';
-import { ScrollReveal } from '@/components/scroll-reveal';
-import { JsonLd } from '@/components/json-ld';
+import { Nav } from '@/components/site/nav';
+import { Footer } from '@/components/site/footer';
+import { ScrollReveal } from '@/components/shared/scroll-reveal';
+import { JsonLd } from '@/components/shared/json-ld';
 import { SITE, SITE_URL } from '@/lib/site-config';
 
 /* Fraunces auto-hébergée au build par next/font (pas de CDN runtime).

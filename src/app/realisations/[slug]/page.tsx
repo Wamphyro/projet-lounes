@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { PROJETS, getProjet } from '@/lib/projets';
 import { PROJET_PHOTOS } from '@/lib/projet-photos';
 import { getProduit } from '@/lib/catalogue';
-import { ProductCard } from '@/components/product-card';
+import { ProductCard } from '@/components/site/product-card';
 
 export function generateStaticParams() {
     return PROJETS.map((p) => ({ slug: p.slug }));

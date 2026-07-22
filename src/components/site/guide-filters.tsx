@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Article } from '@/lib/articles';
-import { ArticleCard } from '@/components/article-card';
+import { ArticleCard } from '@/components/site/article-card';
 
 /** Grille d'articles filtrable par catégorie. */
 export function GuideFilters({ articles, categories }: { articles: Article[]; categories: readonly string[] }) {

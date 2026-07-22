@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { PageHero } from '@/components/page-hero';
-import { ProjetFilters } from '@/components/projet-filters';
+import { PageHero } from '@/components/shared/page-hero';
+import { ProjetFilters } from '@/components/site/projet-filters';
 import { PROJETS, TYPES_PROJET } from '@/lib/projets';
 
 export const metadata: Metadata = {

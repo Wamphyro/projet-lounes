@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PageHero } from '@/components/page-hero';
+import { PageHero } from '@/components/shared/page-hero';
 import { SITE } from '@/lib/site-config';
 import facade from '../../../public/images/showroom-facade.jpg';
 

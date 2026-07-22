@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { PageHero } from '@/components/page-hero';
-import { DevisForm } from '@/components/devis-form';
+import { PageHero } from '@/components/shared/page-hero';
+import { DevisForm } from '@/components/site/devis-form';
 
 export const metadata: Metadata = {
     title: 'Demande de devis',

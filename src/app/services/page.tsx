@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PageHero } from '@/components/page-hero';
+import { PageHero } from '@/components/shared/page-hero';
 
 export const metadata: Metadata = {
     title: 'Services',

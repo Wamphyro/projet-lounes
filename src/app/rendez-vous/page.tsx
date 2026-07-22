@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PageHero } from '@/components/page-hero';
-import { BookingCalendar } from '@/components/booking-calendar';
+import { PageHero } from '@/components/shared/page-hero';
+import { BookingCalendar } from '@/components/site/booking-calendar';
 import { SITE } from '@/lib/site-config';
 
 export const metadata: Metadata = {

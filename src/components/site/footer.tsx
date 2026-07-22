@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SITE, NAV_LINKS } from '@/lib/site-config';
-import { Logo } from '@/components/logo';
+import { Logo } from '@/components/shared/logo';
 
 /** Pied de page — marque, colonnes de liens, mentions. */
 export function Footer() {
@@ -39,6 +39,14 @@ export function Footer() {
                             <li><a href={`tel:${SITE.phone.replace(/ /g, '')}`}>{SITE.phone}</a></li>
                             <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
                             <li><Link href="/devis/">Demander un devis</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Vos espaces</h4>
+                        <ul>
+                            <li><Link href="/panier/">Mon projet</Link></li>
+                            <li><Link href="/espace-client/">Espace client</Link></li>
+                            <li><Link href="/espace-pro/">Accès équipe</Link></li>
                         </ul>
                     </div>
                 </div>

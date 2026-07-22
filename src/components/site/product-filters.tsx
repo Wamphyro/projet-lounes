@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Produit } from '@/lib/catalogue';
-import { ProductCard } from '@/components/product-card';
+import { ProductCard } from '@/components/site/product-card';
 
 /**
  * Grille de produits filtrable par pièce (client, sans rechargement).

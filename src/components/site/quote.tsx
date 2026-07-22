@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import quoteBg from '../../public/images/quote-bg.jpg';
+import quoteBg from '../../../public/images/quote-bg.jpg';
 
 /** Citation plein cadre — 1er des deux moments sombres de la page.
     Fond : pierre brune veinée d'ambre (auto-hébergée), voilée par le dégradé. */

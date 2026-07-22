@@ -1,5 +1,5 @@
 import { COLLECTIONS } from '@/lib/site-config';
-import { MaterialCard } from '@/components/material-card';
+import { MaterialCard } from '@/components/site/material-card';
 
 /** Collections — grille pilotée par données (COLLECTIONS dans site-config). */
 export function CollectionGrid() {

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { NAV_LINKS } from '@/lib/site-config';
-import { Logo } from '@/components/logo';
+import { Logo } from '@/components/shared/logo';
+import { PanierButton } from '@/components/site/panier-button';
 
 /**
  * Navigation fixe : transparente en haut de page, puis fond crème flouté
@@ -33,9 +34,12 @@ export function Nav() {
                         </li>
                     ))}
                 </ul>
-                <Link href="/rendez-vous/" className="btn">
-                    Prendre rendez-vous
-                </Link>
+                <div className="nav-actions">
+                    <PanierButton />
+                    <Link href="/rendez-vous/" className="btn">
+                        Prendre rendez-vous
+                    </Link>
+                </div>
                 <button
                     className="burger"
                     aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
@@ -57,8 +61,11 @@ export function Nav() {
                 <Link href="/rendez-vous/" onClick={() => setOpen(false)}>
                     Rendez-vous
                 </Link>
-                <Link href="/devis/" onClick={() => setOpen(false)}>
-                    Devis
+                <Link href="/panier/" onClick={() => setOpen(false)}>
+                    Mon projet
+                </Link>
+                <Link href="/espace-client/" onClick={() => setOpen(false)}>
+                    Espace client
                 </Link>
             </div>
         </>
