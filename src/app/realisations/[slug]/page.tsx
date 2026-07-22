@@ -51,6 +51,14 @@ export default async function ProjetPage({ params }: { params: Promise<{ slug: s
                                     <tr><td>Année</td><td>{projet.annee}</td></tr>
                                 </tbody>
                             </table>
+                            {projet.temoignage && (
+                                <figure className="form-panel avis-card" style={{ marginBottom: 24 }}>
+                                    <blockquote style={{ fontSize: 15, fontStyle: 'italic' }}>
+                                        « {projet.temoignage.texte} »
+                                    </blockquote>
+                                    <cite>{projet.temoignage.auteur}</cite>
+                                </figure>
+                            )}
                             <Link href="/devis/" className="btn dark">Un projet similaire ? Parlons-en</Link>
                         </div>
                     </div>

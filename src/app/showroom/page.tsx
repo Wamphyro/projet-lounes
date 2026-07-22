@@ -1,34 +1,50 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { PageHero } from '@/components/page-hero';
-import { RdvPicker } from '@/components/rdv-picker';
 import { ProxyImg } from '@/components/proxy-img';
 import { SITE } from '@/lib/site-config';
 
 export const metadata: Metadata = {
-    title: 'Showroom & rendez-vous',
+    title: 'Showroom',
     description:
-        'Réservez votre créneau au showroom DEKA CÉRAM : 400 m² de matières à toucher, à la lumière du jour comme du soir.',
+        'Le showroom DEKA CERAM à Thorey-en-Plaine : 400 m² de matières à toucher, à la lumière du jour comme du soir. Visite sur rendez-vous.',
 };
 
-/** Showroom — infos pratiques + prise de rendez-vous en ligne par créneaux. */
+/** Showroom — le lieu, les infos pratiques, et le renvoi vers le calendrier RDV. */
 export default function ShowroomPage() {
     return (
         <>
             <PageHero
                 eyebrow="Showroom"
                 titre={<>Venez toucher la matière.</>}
-                lead="400 m² d'exposition, des mises en situation grandeur nature et un conseiller dédié à votre créneau. La visite se fait sur rendez-vous — réservez le vôtre ci-dessous."
+                lead="400 m² d'exposition, des mises en situation grandeur nature et un conseiller dédié à votre créneau. La visite se fait sur rendez-vous."
                 crumbs={[{ href: '/showroom/', label: 'Showroom' }]}
             />
 
             <section className="section creme2">
                 <div className="wrap">
-                    <div className="section-head" data-reveal>
-                        <span className="eyebrow">Réserver</span>
-                        <h2>Choisissez votre créneau.</h2>
-                        <p>Visites du mardi au samedi, 9h–12h et 14h–18h. Confirmation sous 24 h ouvrées.</p>
+                    <div className="inline-cta" data-reveal>
+                        <div>
+                            <h3>Réservez votre créneau en ligne.</h3>
+                            <p style={{ color: 'var(--taupe)', fontSize: 15, marginTop: 6 }}>
+                                Mardi → samedi · 9h–12h / 14h–18h · confirmation sous 24 h
+                            </p>
+                        </div>
+                        <Link href="/rendez-vous/" className="btn">Ouvrir le calendrier</Link>
                     </div>
-                    <RdvPicker />
+
+                    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', marginTop: 40 }}>
+                        {[
+                            { t: 'Des mises en situation réelles', p: 'Sols posés en grand, murs montés, douche témoin : vous voyez la matière en volume, pas sur un présentoir de 30 cm.' },
+                            { t: 'La lumière du jour et du soir', p: 'Chaque espace se visite sous éclairage naturel et sous éclairage chaud : un carreau change du tout au tout entre les deux.' },
+                            { t: 'Repartez avec les échantillons', p: 'Les références qui vous plaisent vous suivent chez vous, prêtées une semaine, sans engagement.' },
+                        ].map((b) => (
+                            <div key={b.t} className="form-panel" data-reveal>
+                                <h3 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 21, marginBottom: 8 }}>{b.t}</h3>
+                                <p style={{ color: 'var(--taupe)', fontSize: 15 }}>{b.p}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 

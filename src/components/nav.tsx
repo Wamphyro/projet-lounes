@@ -33,7 +33,7 @@ export function Nav() {
                         </li>
                     ))}
                 </ul>
-                <Link href="/showroom/" className="btn">
+                <Link href="/rendez-vous/" className="btn">
                     Prendre rendez-vous
                 </Link>
                 <button
@@ -54,6 +54,9 @@ export function Nav() {
                         {l.label}
                     </Link>
                 ))}
+                <Link href="/rendez-vous/" onClick={() => setOpen(false)}>
+                    Rendez-vous
+                </Link>
                 <Link href="/devis/" onClick={() => setOpen(false)}>
                     Devis
                 </Link>

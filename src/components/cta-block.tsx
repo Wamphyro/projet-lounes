@@ -13,7 +13,7 @@ export function CtaBlock() {
                         lumière du jour comme du soir. Réservez votre créneau en ligne.
                     </p>
                     <div className="cta-actions">
-                        <Link href="/showroom/" className="btn">
+                        <Link href="/rendez-vous/" className="btn">
                             Prendre rendez-vous
                         </Link>
                         <a href={`tel:${SITE.phone.replace(/ /g, '')}`} className="btn ghost">

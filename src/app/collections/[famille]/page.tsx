@@ -44,7 +44,7 @@ export default async function FamillePage({ params }: { params: Promise<{ famill
                     <div className="inline-cta" data-reveal>
                         <h3>Envie de toucher ces matières ?</h3>
                         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                            <Link href="/showroom/" className="btn">Réserver une visite showroom</Link>
+                            <Link href="/rendez-vous/" className="btn">Réserver une visite showroom</Link>
                             <Link href="/devis/" className="btn dark">Demander un devis</Link>
                         </div>
                     </div>

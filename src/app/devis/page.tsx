@@ -19,8 +19,32 @@ export default function DevisPage() {
                 crumbs={[{ href: '/devis/', label: 'Devis' }]}
             />
             <section className="section creme2">
-                <div className="wrap" style={{ maxWidth: 860 }}>
+                <div className="wrap booking">
                     <DevisForm />
+                    <aside data-reveal>
+                        <div className="form-panel" style={{ marginBottom: 20 }}>
+                            <h3 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 22, marginBottom: 14 }}>
+                                Ce que contient votre devis
+                            </h3>
+                            <ul className="speclist" style={{ margin: 0 }}>
+                                <li>Quantités calculées avec les chutes (+10 %)</li>
+                                <li>Prix fourniture détaillé par référence</li>
+                                <li>Options : pose, livraison, profilés & plinthes</li>
+                                <li>Date de disponibilité ferme des matières</li>
+                            </ul>
+                        </div>
+                        <div className="form-panel">
+                            <h3 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 22, marginBottom: 14 }}>
+                                Nos engagements
+                            </h3>
+                            <ul className="speclist" style={{ margin: 0 }}>
+                                <li>Réponse sous 48 h ouvrées</li>
+                                <li>Devis gratuit et sans engagement</li>
+                                <li>Prix fermes pendant 60 jours</li>
+                                <li>Un seul interlocuteur du devis à la livraison</li>
+                            </ul>
+                        </div>
+                    </aside>
                 </div>
             </section>
         </>

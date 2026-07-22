@@ -59,11 +59,41 @@ export default function ServicesPage() {
             </section>
             <section className="section">
                 <div className="wrap">
+                    <div className="section-head" data-reveal>
+                        <span className="eyebrow">Comment ça se passe</span>
+                        <h2>De l&rsquo;idée au dernier joint, en quatre étapes.</h2>
+                    </div>
+                    <div className="steps" data-reveal>
+                        <div className="step">
+                            <div className="n">1</div>
+                            <h3>On se rencontre</h3>
+                            <p>Une heure en showroom, sur rendez-vous. Vos plans, vos photos, vos envies — et une première sélection de matières composée devant vous.</p>
+                        </div>
+                        <div className="step">
+                            <div className="n">2</div>
+                            <h3>Vous validez chez vous</h3>
+                            <p>Échantillons prêtés une semaine. Vous jugez la matière à votre lumière, à côté de vos peintures et de vos meubles.</p>
+                        </div>
+                        <div className="step">
+                            <div className="n">3</div>
+                            <h3>Devis sous 48 h</h3>
+                            <p>Quantités calculées avec les chutes, options de pose, date de livraison ferme. Aucune surprise en cours de chantier.</p>
+                        </div>
+                        <div className="step">
+                            <div className="n">4</div>
+                            <h3>Livraison & suivi</h3>
+                            <p>Livraison coordonnée avec votre carreleur, complément d&rsquo;urgence si besoin, et nous restons joignables jusqu&rsquo;au dernier joint.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section className="section creme2">
+                <div className="wrap">
                     <div className="inline-cta" data-reveal>
                         <h3>Un projet en tête ?</h3>
                         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                             <Link href="/devis/" className="btn">Demander un devis</Link>
-                            <Link href="/showroom/" className="btn dark">Venir au showroom</Link>
+                            <Link href="/rendez-vous/" className="btn dark">Prendre rendez-vous</Link>
                         </div>
                     </div>
                 </div>

@@ -15,6 +15,7 @@ export type Projet = {
     description: string;
     seed: string;
     produits: string[];
+    temoignage?: { texte: string; auteur: string };
 };
 
 export const PROJETS: Projet[] = [
@@ -30,6 +31,10 @@ export const PROJETS: Projet[] = [
             'Un plateau de 180 m² traité comme une seule matière : le Calacatta Oro en grand format 120×280 file du séjour à la cuisine sans seuil, joints de 2 mm alignés sur les baies. Plinthes assorties coupées dans les mêmes dalles.',
         seed: 'terra-a',
         produits: ['calacatta-oro', 'beton-cire-taupe'],
+        temoignage: {
+            texte: 'Cent quatre-vingts mètres carrés sans un seuil, des joints qu’on ne voit pas : exactement le sol qu’on avait imaginé.',
+            auteur: 'Les propriétaires',
+        },
     },
     {
         slug: 'restaurant-le-comptoir',
@@ -43,6 +48,10 @@ export const PROJETS: Projet[] = [
             'Un sol qui devait tout encaisser : service continu, chaises traînées, passage intensif. Le Terrazzo Venezia en 80×80 adouci répond présent, souligné de profilés laiton aux changements de zone.',
         seed: 'terra-b',
         produits: ['terrazzo-venezia', 'terrazzo-notte'],
+        temoignage: {
+            texte: 'Cent vingt couverts par jour depuis un an, et le sol est comme au premier soir. Le choix du terrazzo était le bon.',
+            auteur: 'Le gérant, Le Comptoir',
+        },
     },
     {
         slug: 'boutique-hotel-remparts',
@@ -56,6 +65,10 @@ export const PROJETS: Projet[] = [
             'Douze chambres, douze salles d’eau, une même grammaire : zellige émaillé à hauteur d’homme, marbre de Carrare au sol, robinetterie laiton brossé. Le vert émeraude change avec la lumière du matin au soir.',
         seed: 'terra-c',
         produits: ['zellige-vert-emeraude', 'marbre-carrare'],
+        temoignage: {
+            texte: 'Nos clients photographient les salles de bain autant que les chambres. Le zellige émeraude est devenu notre signature.',
+            auteur: 'La direction de l’hôtel',
+        },
     },
     {
         slug: 'maison-de-ville-cuisine',
@@ -82,6 +95,10 @@ export const PROJETS: Projet[] = [
             'Le travertin en opus romain, posé à joints ouverts sur plots : fraîcheur sous le pied en plein été, antidérapance R11, margelles arrondies façonnées sur mesure. Traitement hydrofuge avant livraison.',
         seed: 'terra-e',
         produits: ['travertin-classique', 'pierre-de-bourgogne'],
+        temoignage: {
+            texte: 'Fraîcheur sous le pied en plein août, aucune glissade en un été de baignades : le travertin tient toutes ses promesses.',
+            auteur: 'Le propriétaire',
+        },
     },
     {
         slug: 'loft-atelier',

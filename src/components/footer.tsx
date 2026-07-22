@@ -30,7 +30,7 @@ export function Footer() {
                         <ul>
                             <li><Link href="/showroom/">{SITE.address}</Link></li>
                             <li><Link href="/showroom/">{SITE.hours}</Link></li>
-                            <li><Link href="/showroom/#rdv">Réserver un créneau</Link></li>
+                            <li><Link href="/rendez-vous/">Réserver un créneau</Link></li>
                         </ul>
                     </div>
                     <div>
