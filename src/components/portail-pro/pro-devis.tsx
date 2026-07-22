@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PRODUITS } from '@/lib/catalogue';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import {
-    useDevis, prochainIdDevis, totalDevis,
+    useDevis, useFactures, factureDepuisDevis, prochainIdDevis, totalDevis,
     DEVIS_STATUTS, type Devis, type DevisStatut, type LigneDevis,
 } from '@/services/commerce';
 
@@ -22,10 +23,18 @@ const tone = (s: DevisStatut) =>
 export function ProDevis() {
     const params = useSearchParams();
     const [devis, setDevis] = useDevis();
+    const [factures, setFactures] = useFactures();
     const [selId, setSelId] = useState<string | null>(null);
     const [creation, setCreation] = useState(params.get('nouveau') === '1');
 
     const sel = devis.find((d) => d.id === selId) ?? (creation ? null : devis[0]);
+    /* Garde-fou : un devis ne peut donner qu'une seule facture. */
+    const factureDuDevis = sel ? factures.find((f) => f.devisId === sel.id) : undefined;
+
+    const facturer = (d: Devis) => {
+        if (factures.some((f) => f.devisId === d.id)) return;
+        setFactures([factureDepuisDevis(d, factures), ...factures]);
+    };
 
     const majStatut = (id: string, statut: DevisStatut) =>
         setDevis(devis.map((d) => (d.id === id ? { ...d, statut } : d)));
@@ -213,6 +222,20 @@ export function ProDevis() {
                             <p style={{ fontSize: 13, color: 'var(--ambre-fonce)', marginTop: 14 }}>
                                 Visible par le client dans son espace — en attente de sa décision.
                             </p>
+                        )}
+                        {sel.statut === 'Accepté' && (
+                            <div style={{ marginTop: 18 }}>
+                                {factureDuDevis ? (
+                                    <p style={{ fontSize: 14 }}>
+                                        <span className="pill ok" style={{ marginRight: 8 }}>Facturé</span>
+                                        Facture <Link href="/espace-pro/factures/" style={{ textDecoration: 'underline', fontWeight: 600 }}>{factureDuDevis.id}</Link> émise le {factureDuDevis.date}.
+                                    </p>
+                                ) : (
+                                    <button className="btn" onClick={() => facturer(sel)}>
+                                        Transformer en facture
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 ) : null}

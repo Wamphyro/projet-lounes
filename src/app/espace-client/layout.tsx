@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 const LINKS: PortalLink[] = [
     { href: '/espace-client/', label: 'Tableau de bord', icone: '▦' },
     { href: '/espace-client/devis/', label: 'Mes devis', icone: '✎' },
+    { href: '/espace-client/factures/', label: 'Mes factures', icone: '⎙' },
     { href: '/espace-client/commandes/', label: 'Mes commandes', icone: '⧉' },
     { href: '/espace-client/rendez-vous/', label: 'Mes rendez-vous', icone: '◷' },
     { href: '/espace-client/echantillons/', label: 'Mes échantillons', icone: '▤' },

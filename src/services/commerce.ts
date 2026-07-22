@@ -138,6 +138,39 @@ const DEMANDES_SEED: Demande[] = [
     { id: 'DEM-111', type: 'Devis', contact: 'SCI Les Remparts — contact@remparts.fr', detail: 'Projet pro : 12 salles d’eau, marbre + zellige', date: '19/07/2026', traitee: true },
 ];
 
+/** Facture — issue de la transformation d'un devis accepté (1 devis → 1 facture). */
+export type FactureStatut = 'À régler' | 'Réglée';
+export type Facture = {
+    id: string;
+    devisId: string;
+    client: string;
+    email: string;
+    date: string;
+    lignes: LigneDevis[];
+    remisePct: number;
+    total: number;
+    statut: FactureStatut;
+};
+
+export const FACTURE_STATUTS: FactureStatut[] = ['À régler', 'Réglée'];
+
+const FACTURES_SEED: Facture[] = [
+    {
+        id: 'FAC-1027',
+        devisId: 'DEV-0779',
+        client: 'M. Roussel',
+        email: 'roussel@mail.fr',
+        date: '17/07/2026',
+        remisePct: 0,
+        total: 7670,
+        statut: 'Réglée',
+        lignes: [
+            { slug: 'travertin-classique', nom: 'Travertin Classique (opus)', prix: 85, surface: 74 },
+            { slug: 'pierre-de-bourgogne', nom: 'Pierre de Bourgogne (margelles)', prix: 115, surface: 12 },
+        ],
+    },
+];
+
 /** Rendez-vous showroom du client (réservables depuis le site OU le portail). */
 export type Rdv = {
     date: string;
@@ -241,6 +274,26 @@ export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDE
 export const useStock = () => useCollection<Record<string, number>>('dc-stock-v2', STOCK_INITIAL);
 export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v2', RECEPTIONS_SEED);
 export const useRdv = () => useCollection<Rdv[]>('dc-rdv', RDV_SEED);
+export const useFactures = () => useCollection<Facture[]>('dc-factures', FACTURES_SEED);
+
+/** Prochain numéro de facture (FAC-XXXX). */
+export const prochainIdFacture = (factures: Facture[]) => {
+    const max = factures.reduce((m, f) => Math.max(m, parseInt(f.id.replace('FAC-', ''), 10) || 0), 1026);
+    return `FAC-${String(max + 1).padStart(4, '0')}`;
+};
+
+/** Transforme un devis accepté en facture (à l'appelant de vérifier l'unicité). */
+export const factureDepuisDevis = (d: Devis, factures: Facture[]): Facture => ({
+    id: prochainIdFacture(factures),
+    devisId: d.id,
+    client: d.client,
+    email: d.email,
+    date: new Date().toLocaleDateString('fr-FR'),
+    lignes: d.lignes,
+    remisePct: d.remisePct,
+    total: totalDevis(d),
+    statut: 'À régler',
+});
 
 /** Prochain numéro de réception (REC-XXX). */
 export const prochainIdReception = (receptions: Reception[]) => {
