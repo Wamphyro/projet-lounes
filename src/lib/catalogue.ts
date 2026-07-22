@@ -383,6 +383,34 @@ export const PRODUITS: Produit[] = [
     },
 ];
 
+/* ============================================================
+   Références (SKU) — réalité du négoce carrelage : un MODÈLE se
+   décline en plusieurs RÉFÉRENCES, une par couleur × format.
+   Générées depuis le SSOT : ajouter une couleur ou un format à un
+   produit crée automatiquement ses références.
+   ============================================================ */
+export type Variante = { ref: string; produit: string; couleur: string; format: string };
+
+const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const codeNom = (s: string) => norm(s).replace(/[^A-Z]/g, '').slice(0, 3);
+const codeFormat = (f: string) => {
+    const num = f.replace(/[^0-9×x]/g, '').replace(/[×x]/g, 'X');
+    return num || norm(f).replace(/[^A-Z]/g, '').slice(0, 4);
+};
+
+export const variantesDeProduit = (p: Produit): Variante[] =>
+    p.couleurs.flatMap((c) =>
+        p.formats.map((f) => ({
+            ref: `${codeNom(p.nom)}-${codeFormat(f)}-${codeNom(c)}`,
+            produit: p.slug,
+            couleur: c,
+            format: f,
+        }))
+    );
+
+export const TOUTES_VARIANTES: Variante[] = PRODUITS.flatMap(variantesDeProduit);
+export const getVariante = (ref: string) => TOUTES_VARIANTES.find((v) => v.ref === ref);
+
 /* — Accès — */
 export const getFamille = (slug: string) => FAMILLES.find((f) => f.slug === slug);
 export const getProduit = (slug: string) => PRODUITS.find((p) => p.slug === slug);

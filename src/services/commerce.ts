@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { TOUTES_VARIANTES, variantesDeProduit, type Produit } from '@/lib/catalogue';
 
 /**
  * Store COMMERCE partagé — devis, commandes, stock, demandes.
@@ -149,8 +150,8 @@ const RDV_SEED: Rdv[] = [
     { date: 'Samedi 26 juillet 2026', heure: '10:00', objet: 'Choix des finitions — salle de bain', statut: 'Confirmé' },
 ];
 
-/** Réception de stock (bon de livraison fournisseur). */
-export type LigneReception = { slug: string; nom: string; quantite: number };
+/** Réception de stock (bon de livraison fournisseur) — par RÉFÉRENCE. */
+export type LigneReception = { ref: string; nom: string; quantite: number };
 export type Reception = {
     id: string;
     bl: string;
@@ -168,20 +169,33 @@ const RECEPTIONS_SEED: Reception[] = [
         date: '18/07/2026',
         mode: 'Saisie manuelle',
         lignes: [
-            { slug: 'calacatta-oro', nom: 'Calacatta Oro', quantite: 120 },
-            { slug: 'terrazzo-venezia', nom: 'Terrazzo Venezia', quantite: 80 },
+            { ref: 'CAL-60X120-BLA', nom: 'Calacatta Oro · Blanc · 60×120', quantite: 120 },
+            { ref: 'TER-60X60-CRE', nom: 'Terrazzo Venezia · Crème · 60×60', quantite: 80 },
         ],
     },
 ];
 
-export const STOCK_INITIAL: Record<string, number> = {
-    'calacatta-oro': 264, 'sahara-noir': 92, 'beton-cire-taupe': 540, 'travertin-navona': 318,
-    'zellige-blanc-neige': 74, 'zellige-vert-emeraude': 12, 'zellige-bleu-majorelle': 28, 'zellige-terre-cuite': 66,
-    'terrazzo-venezia': 210, 'terrazzo-notte': 48, 'terrazzo-rosa': 8, 'terrazzo-micro': 156,
-    'pierre-de-bourgogne': 120, 'travertin-classique': 385, 'marbre-carrare': 36, 'ardoise-noire': 174,
-    'metro-biseaute-blanc': 620, 'faience-bosselee-creme': 240, 'carreau-ciment-heritage': 96, 'credence-artisanale-ambre': 54,
+/* Stock PAR RÉFÉRENCE (couleur × format), généré depuis le catalogue :
+   quantités de démo déterministes, certaines volontairement à 0 ou en alerte. */
+const seedQty = (ref: string) => {
+    let h = 0;
+    for (const ch of ref) h = (h * 31 + ch.charCodeAt(0)) % 997;
+    const q = (h * 7) % 170;
+    return q < 18 ? 0 : q;
 };
-export const SEUIL_STOCK = 50;
+
+export const STOCK_INITIAL: Record<string, number> = Object.fromEntries(
+    TOUTES_VARIANTES.map((v) => [v.ref, seedQty(v.ref)])
+);
+export const SEUIL_STOCK = 30; // seuil de réappro PAR RÉFÉRENCE (m²)
+
+/** Stock total d'un modèle = somme de ses références. */
+export const stockDuModele = (stock: Record<string, number>, p: Produit) =>
+    variantesDeProduit(p).reduce((t, v) => t + (stock[v.ref] ?? 0), 0);
+
+/** Références d'un modèle sous le seuil (ou en rupture). */
+export const refsEnAlerte = (stock: Record<string, number>, p: Produit) =>
+    variantesDeProduit(p).filter((v) => (stock[v.ref] ?? 0) < SEUIL_STOCK);
 
 /* ==================== Persistance + hook générique ==================== */
 
@@ -224,8 +238,8 @@ export function useCollection<T>(key: string, seed: T): [T, (v: T) => void] {
 export const useDevis = () => useCollection<Devis[]>('dc-devis', DEVIS_SEED);
 export const useCommandes = () => useCollection<Commande[]>('dc-commandes', COMMANDES_SEED);
 export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDES_SEED);
-export const useStock = () => useCollection<Record<string, number>>('dc-stock', STOCK_INITIAL);
-export const useReceptions = () => useCollection<Reception[]>('dc-receptions', RECEPTIONS_SEED);
+export const useStock = () => useCollection<Record<string, number>>('dc-stock-v2', STOCK_INITIAL);
+export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v2', RECEPTIONS_SEED);
 export const useRdv = () => useCollection<Rdv[]>('dc-rdv', RDV_SEED);
 
 /** Prochain numéro de réception (REC-XXX). */

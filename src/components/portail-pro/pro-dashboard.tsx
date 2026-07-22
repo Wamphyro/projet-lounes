@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { PRODUITS } from '@/lib/catalogue';
 import {
     useDevis, useCommandes, useDemandes, useStock,
-    totalDevis, SEUIL_STOCK,
+    totalDevis, refsEnAlerte,
 } from '@/services/commerce';
 
 /** Tableau de bord équipe — indicateurs + activité récente. */
@@ -17,7 +17,7 @@ export function ProDashboard() {
     const enCours = commandes.filter((c) => c.statut !== 'Livrée');
     const devisOuverts = devis.filter((d) => d.statut === 'Brouillon' || d.statut === 'Envoyé');
     const aTraiter = demandes.filter((d) => !d.traitee);
-    const sousSeuil = PRODUITS.filter((p) => (stock[p.slug] ?? 0) < SEUIL_STOCK);
+    const sousSeuil = PRODUITS.filter((p) => refsEnAlerte(stock, p).length > 0);
 
     return (
         <>
@@ -33,7 +33,7 @@ export function ProDashboard() {
                 <div className="tile"><div className="val">{enCours.length}</div><div className="lbl">Commandes en cours</div></div>
                 <div className="tile"><div className="val">{devisOuverts.length}</div><div className="lbl">Devis ouverts</div></div>
                 <div className="tile"><div className="val">{aTraiter.length}</div><div className="lbl">Demandes à traiter</div></div>
-                <div className="tile"><div className="val">{sousSeuil.length}</div><div className="lbl">Références sous seuil</div></div>
+                <div className="tile"><div className="val">{sousSeuil.length}</div><div className="lbl">Modèles avec réappro conseillée</div></div>
             </div>
 
             <div className="md" style={{ gridTemplateColumns: '1fr 1fr' }}>
