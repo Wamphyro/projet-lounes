@@ -1,218 +1,321 @@
 'use client';
 
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { SITE, LEGAL } from '@/lib/site-config';
 import { totalDevis, type Devis, type Facture } from '@/services/commerce';
 
 /**
- * Export PDF des devis et factures — sans dépendance : un document A4 aux
- * couleurs de la marque (Fraunces, crème/ambre/encre) s'ouvre dans un onglet
- * avec la boîte d'impression : « Enregistrer en PDF » ou papier.
- * Le backend générera plus tard le même gabarit côté serveur (archivage, email).
+ * Génération de VRAIS fichiers PDF (jsPDF, côté navigateur) pour les devis
+ * et factures : le document s'ouvre dans la visionneuse PDF du navigateur
+ * (boutons télécharger / imprimer), texte vectoriel sélectionnable.
+ * Gabarit aux couleurs de la marque ; le backend reprendra le même dessin
+ * côté serveur pour l'archivage et l'envoi par email.
  */
 
-const esc = (s: string) =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/* — Palette de la marque (RVB) — */
+const ENCRE: [number, number, number] = [42, 36, 29];
+const TAUPE: [number, number, number] = [133, 122, 106];
+const CREME: [number, number, number] = [247, 242, 233];
+const CREME2: [number, number, number] = [251, 248, 241];
+const SABLE: [number, number, number] = [239, 231, 215];
+const AMBRE: [number, number, number] = [192, 133, 43];
+const AMBRE_F: [number, number, number] = [154, 106, 29];
+const VERT: [number, number, number] = [62, 110, 52];
+const VERT_BG: [number, number, number] = [227, 238, 224];
+const AMBRE_BG: [number, number, number] = [243, 229, 205];
+
+const M = 16;        // marge (mm)
+const W = 210;       // largeur A4
+const DROITE = W - M;
 
 const eur = (n: number) =>
     `${n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
 
-const MONOGRAMME = `
-<svg viewBox="0 0 112 100" style="height:42px;width:auto;flex-shrink:0" aria-hidden="true">
-  <path d="M24 15 H44 A35 35 0 0 1 44 85 H24 Z" fill="none" stroke="#2A241D" stroke-width="9"/>
-  <path d="M101.1 38.9 A27 27 0 1 0 101.1 77.1" fill="none" stroke="#2A241D" stroke-width="9"/>
-</svg>`;
-
-function gabarit(titreOnglet: string, corps: string): string {
-    return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>${esc(titreOnglet)} — ${esc(LEGAL.denomination)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&display=swap" rel="stylesheet">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  :root { --encre:#2A241D; --taupe:#857A6A; --creme:#F7F2E9; --sable:#EFE7D7; --ambre:#C0852B; --ambre-f:#9A6A1D; --ligne:rgba(42,36,29,.14); }
-  body { font-family: -apple-system, "Segoe UI", system-ui, Arial, sans-serif; color: var(--encre); background: #fff; font-size: 13px; }
-  .serif { font-family: "Fraunces", Georgia, serif; }
-  .page { max-width: 760px; margin: 0 auto; padding: 44px 40px; }
-
-  /* — En-tête de marque — */
-  .entete { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 3px solid var(--ambre); }
-  .marque { display: flex; align-items: center; gap: 14px; }
-  .marque .nom { font-family: "Fraunces", Georgia, serif; font-size: 21px; font-weight: 600; letter-spacing: .14em; }
-  .marque .sous { font-size: 10.5px; color: var(--taupe); letter-spacing: .06em; margin-top: 3px; }
-  .coords { text-align: right; font-size: 11px; color: var(--taupe); line-height: 1.7; }
-
-  /* — Cartouche titre + infos — */
-  .titre-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin: 30px 0 24px; }
-  h1 { font-family: "Fraunces", Georgia, serif; font-weight: 500; font-size: 30px; letter-spacing: -0.01em; }
-  h1 .num { color: var(--ambre-f); }
-  .infos { text-align: right; font-size: 12px; color: var(--taupe); line-height: 1.8; }
-  .infos b { color: var(--encre); }
-  .badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 14px; border-radius: 100px; }
-  .badge.ok { background: rgba(80,140,70,.15); color: #3e6e34; }
-  .badge.warn { background: rgba(192,133,43,.18); color: var(--ambre-f); }
-
-  /* — Blocs client / contact — */
-  .blocs { display: flex; gap: 18px; margin-bottom: 26px; }
-  .bloc { flex: 1; background: var(--creme); border-radius: 12px; padding: 14px 18px; font-size: 12.5px; line-height: 1.7; }
-  .bloc b { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--ambre-f); margin-bottom: 6px; }
-  .bloc .qui { font-weight: 600; font-size: 14px; }
-
-  /* — Tableau des lignes — */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th { background: var(--sable); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--ambre-f); padding: 9px 12px; text-align: left; }
-  thead th:first-child { border-radius: 8px 0 0 8px; }
-  thead th:last-child { border-radius: 0 8px 8px 0; }
-  th.d, td.d { text-align: right; font-variant-numeric: tabular-nums; }
-  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--ligne); }
-  tbody tr:nth-child(even) td { background: #FBF8F1; }
-
-  /* — Totaux — */
-  .totaux { margin: 14px 0 0 auto; width: 320px; font-size: 13px; }
-  .totaux .l { display: flex; justify-content: space-between; padding: 6px 14px; color: var(--taupe); }
-  .totaux .l span:last-child { color: var(--encre); font-variant-numeric: tabular-nums; }
-  .totaux .grand { display: flex; justify-content: space-between; align-items: baseline; background: var(--sable); border-radius: 10px; padding: 11px 14px; margin-top: 6px; }
-  .totaux .grand .lib { font-weight: 700; font-size: 13px; }
-  .totaux .grand .val { font-family: "Fraunces", Georgia, serif; font-size: 21px; font-weight: 600; color: var(--ambre-f); }
-  .totaux .tva { display: flex; justify-content: space-between; padding: 6px 14px 0; color: var(--taupe); font-size: 11px; }
-
-  /* — Notes, signature, conditions — */
-  .notes { margin-top: 24px; background: var(--creme); border-left: 3px solid var(--ambre); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 12.5px; color: var(--encre); }
-  .bas { display: flex; gap: 22px; margin-top: 30px; align-items: stretch; }
-  .conditions { flex: 1.4; font-size: 10.5px; color: var(--taupe); line-height: 1.7; }
-  .conditions b { color: var(--ambre-f); display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 5px; }
-  .signature { flex: 1; border: 1.5px dashed var(--ambre); border-radius: 12px; padding: 12px 16px; min-height: 110px; }
-  .signature b { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--ambre-f); }
-  .signature span { display: block; font-size: 10.5px; color: var(--taupe); margin-top: 4px; }
-
-  .pied { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--ligne); font-size: 9.5px; color: var(--taupe); text-align: center; line-height: 1.7; }
-  @page { size: A4; margin: 12mm; }
-  @media print { .page { padding: 0; max-width: none; } }
-</style>
-</head>
-<body>
-<div class="page">
-  <div class="entete">
-    <div class="marque">
-      ${MONOGRAMME}
-      <div>
-        <div class="nom">DEKA CÉRAM</div>
-        <div class="sous">Carrelage &amp; pierre naturelle — showroom, conseil, pose</div>
-      </div>
-    </div>
-    <div class="coords">
-      ${esc(LEGAL.siege)}<br>
-      ${esc(SITE.phone)}<br>
-      ${esc(SITE.email)}
-    </div>
-  </div>
-  ${corps}
-  <div class="pied">
-    ${esc(LEGAL.denomination)} — ${esc(LEGAL.forme)} au capital de ${esc(LEGAL.capital)} · Siège social : ${esc(LEGAL.siege)}<br>
-    ${esc(LEGAL.rcs)} — SIREN et TVA intracommunautaire en cours d'attribution
-  </div>
-</div>
-<script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 450); });</script>
-</body>
-</html>`;
+/* — Monogramme DC vectoriel (D en béziers, C en cercle avec ouverture) — */
+function monogramme(doc: jsPDF, x: number, y: number, h: number) {
+    const ep = h * 0.13;
+    doc.setDrawColor(...ENCRE);
+    doc.setLineWidth(ep);
+    doc.setLineCap('butt');
+    const a = h * 0.28;       // largeur du plat du D
+    const r = h / 2;          // rayon du bol
+    const k = 0.5523 * r;
+    /* D : barre gauche + plats + bol droit en 2 béziers */
+    doc.line(x, y, x, y + h);
+    doc.line(x - ep / 2, y, x + a, y);
+    doc.line(x - ep / 2, y + h, x + a, y + h);
+    doc.lines(
+        [
+            [k, 0, r, r - k, r, r],
+            [0, k, k - r, r, -r, r],
+        ],
+        x + a, y, [1, 1], 'S', false
+    );
+    /* C : cercle ouvert à droite (ouverture masquée en blanc) */
+    const cx = x + a + r + h * 0.18;
+    const cy = y + h * 0.62;
+    const rc = h * 0.42;
+    doc.circle(cx, cy, rc, 'S');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(cx + rc * 0.55, cy - rc * 0.5, rc * 0.75, rc, 'F');
+    return cx + rc; // bord droit du monogramme
 }
 
-function tableauLignes(lignes: { nom: string; surface: number; prix: number }[]): string {
-    return `
-  <table>
-    <thead>
-      <tr><th>Désignation</th><th class="d">Surface</th><th class="d">PU TTC</th><th class="d">Total TTC</th></tr>
-    </thead>
-    <tbody>
-      ${lignes.map((l) => `
-      <tr>
-        <td>${esc(l.nom)}</td>
-        <td class="d">${l.surface.toLocaleString('fr-FR')} m²</td>
-        <td class="d">${eur(l.prix)}/m²</td>
-        <td class="d">${eur(l.surface * l.prix)}</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
+function entete(doc: jsPDF) {
+    const finLogo = monogramme(doc, M + 1, 13, 12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(...ENCRE);
+    doc.setCharSpace(1.6);
+    doc.text('DEKA CÉRAM', finLogo + 6, 18.5);
+    doc.setCharSpace(0);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...TAUPE);
+    doc.text('CARRELAGE & PIERRE NATURELLE — SHOWROOM, CONSEIL, POSE', finLogo + 6, 23.5);
+    doc.setFontSize(7.5);
+    doc.text([LEGAL.siege, SITE.phone, SITE.email], DROITE, 14.5, { align: 'right', lineHeightFactor: 1.6 });
+    doc.setDrawColor(...AMBRE);
+    doc.setLineWidth(1);
+    doc.line(M, 30, DROITE, 30);
 }
 
-function blocTotaux(libelle: string, sousTotal: number, remisePct: number, total: number): string {
-    const tva = total - total / 1.2;
-    return `
-  <div class="totaux">
-    ${remisePct > 0 ? `
-    <div class="l"><span>Sous-total TTC</span><span>${eur(sousTotal)}</span></div>
-    <div class="l"><span>Remise commerciale (−${remisePct} %)</span><span>−${eur(sousTotal - total)}</span></div>` : ''}
-    <div class="grand"><span class="lib">${esc(libelle)}</span><span class="val">${eur(total)}</span></div>
-    <div class="tva"><span>dont TVA 20 %</span><span>${eur(tva)}</span></div>
-  </div>`;
+function pied(doc: jsPDF) {
+    doc.setDrawColor(210, 202, 188);
+    doc.setLineWidth(0.2);
+    doc.line(M, 279, DROITE, 279);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.8);
+    doc.setTextColor(...TAUPE);
+    doc.text(
+        [
+            `${LEGAL.denomination} — ${LEGAL.forme} au capital de ${LEGAL.capital} · Siège social : ${LEGAL.siege}`,
+            `${LEGAL.rcs} — SIREN et TVA intracommunautaire en cours d'attribution`,
+        ],
+        W / 2, 283, { align: 'center', lineHeightFactor: 1.5 }
+    );
 }
 
-function ouvrir(html: string) {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
+function blocInfo(doc: jsPDF, x: number, larg: number, y: number, titre: string, l1: string, l2: string) {
+    doc.setFillColor(...CREME);
+    doc.roundedRect(x, y, larg, 21, 2.5, 2.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.6);
+    doc.setTextColor(...AMBRE_F);
+    doc.setCharSpace(0.7);
+    doc.text(titre.toUpperCase(), x + 6, y + 6);
+    doc.setCharSpace(0);
+    doc.setFontSize(10);
+    doc.setTextColor(...ENCRE);
+    doc.text(l1, x + 6, y + 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...TAUPE);
+    doc.text(l2, x + 6, y + 17.5);
 }
+
+function tableauLignes(doc: jsPDF, y: number, lignes: { nom: string; surface: number; prix: number }[]) {
+    autoTable(doc, {
+        startY: y,
+        margin: { left: M, right: M },
+        head: [['Désignation', 'Surface', 'PU TTC', 'Total TTC']],
+        body: lignes.map((l) => [
+            l.nom,
+            `${l.surface.toLocaleString('fr-FR')} m²`,
+            `${eur(l.prix)}/m²`,
+            eur(l.surface * l.prix),
+        ]),
+        styles: { font: 'helvetica', fontSize: 9, textColor: ENCRE, cellPadding: { top: 3.2, bottom: 3.2, left: 3, right: 3 } },
+        headStyles: { fillColor: SABLE, textColor: AMBRE_F, fontSize: 7, fontStyle: 'bold', cellPadding: { top: 3, bottom: 3, left: 3, right: 3 } },
+        alternateRowStyles: { fillColor: CREME2 },
+        columnStyles: {
+            0: { cellWidth: 88 },
+            1: { halign: 'right' },
+            2: { halign: 'right' },
+            3: { halign: 'right', fontStyle: 'bold' },
+        },
+        theme: 'plain',
+        didParseCell: (d) => {
+            if (d.section === 'head' && d.column.index > 0) d.cell.styles.halign = 'right';
+        },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (doc as any).lastAutoTable.finalY as number;
+}
+
+function blocTotaux(doc: jsPDF, y: number, libelle: string, sousTotal: number, remisePct: number, total: number) {
+    const larg = 84;
+    const x = DROITE - larg;
+    let cy = y + 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    if (remisePct > 0) {
+        doc.setTextColor(...TAUPE);
+        doc.text('Sous-total TTC', x + 4, cy);
+        doc.setTextColor(...ENCRE);
+        doc.text(eur(sousTotal), DROITE - 4, cy, { align: 'right' });
+        cy += 5.5;
+        doc.setTextColor(...TAUPE);
+        doc.text(`Remise commerciale (−${remisePct} %)`, x + 4, cy);
+        doc.setTextColor(...ENCRE);
+        doc.text(`−${eur(sousTotal - total)}`, DROITE - 4, cy, { align: 'right' });
+        cy += 4;
+    }
+    doc.setFillColor(...SABLE);
+    doc.roundedRect(x, cy - 1, larg, 11, 2.5, 2.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...ENCRE);
+    doc.text(libelle, x + 4, cy + 6);
+    doc.setFontSize(13);
+    doc.setTextColor(...AMBRE_F);
+    doc.text(eur(total), DROITE - 4, cy + 6.5, { align: 'right' });
+    cy += 14.5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...TAUPE);
+    doc.text('dont TVA 20 %', x + 4, cy);
+    doc.text(eur(total - total / 1.2), DROITE - 4, cy, { align: 'right' });
+    return cy + 4;
+}
+
+function conditions(doc: jsPDF, y: number, titre: string, texte: string, largeur: number) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.6);
+    doc.setTextColor(...AMBRE_F);
+    doc.setCharSpace(0.7);
+    doc.text(titre.toUpperCase(), M, y);
+    doc.setCharSpace(0);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...TAUPE);
+    const lignes = doc.splitTextToSize(texte, largeur);
+    doc.text(lignes, M, y + 4.5, { lineHeightFactor: 1.5 });
+    return y + 4.5 + lignes.length * 4;
+}
+
+function ouvrir(doc: jsPDF, titre: string) {
+    doc.setProperties({ title: titre, author: LEGAL.denomination });
+    window.open(doc.output('bloburl'), '_blank');
+}
+
+/* ============================== DEVIS ============================== */
 
 export function exporterDevisPdf(d: Devis) {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    entete(doc);
+
+    /* Titre + cartouche d'infos */
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(...ENCRE);
+    doc.text('Devis', M, 44);
+    doc.setTextColor(...AMBRE_F);
+    doc.text(d.id, M + doc.getTextWidth('Devis ') + 1, 44);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...TAUPE);
+    doc.text([`Édité le ${d.date}`, 'Valable 60 jours · prix fermes'], DROITE, 39.5, { align: 'right', lineHeightFactor: 1.7 });
+
+    /* Blocs client / conseiller */
+    const largBloc = (DROITE - M - 6) / 2;
+    blocInfo(doc, M, largBloc, 50, 'Client', d.client, d.email || '');
+    blocInfo(doc, M + largBloc + 6, largBloc, 50, 'Votre conseiller', LEGAL.president, SITE.phone);
+
+    /* Lignes + totaux */
+    let y = tableauLignes(doc, 77, d.lignes);
     const sousTotal = d.lignes.reduce((t, l) => t + l.surface * l.prix, 0);
-    const corps = `
-  <div class="titre-row">
-    <h1>Devis <span class="num">${esc(d.id)}</span></h1>
-    <div class="infos">
-      Édité le <b>${esc(d.date)}</b><br>
-      Valable <b>60 jours</b> · prix fermes
-    </div>
-  </div>
-  <div class="blocs">
-    <div class="bloc"><b>Client</b><span class="qui">${esc(d.client)}</span>${d.email ? `${esc(d.email)}` : ''}</div>
-    <div class="bloc"><b>Votre conseiller</b><span class="qui">${esc(LEGAL.president)}</span>${esc(SITE.phone)}</div>
-  </div>
-  ${tableauLignes(d.lignes)}
-  ${blocTotaux('Total TTC fourniture', sousTotal, d.remisePct, totalDevis(d))}
-  ${d.notes ? `<div class="notes">${esc(d.notes)}</div>` : ''}
-  <div class="bas">
-    <div class="conditions">
-      <b>Conditions</b>
-      Devis valable 60 jours à compter de sa date d'édition. Prix TTC, fourniture seule — pose,
-      livraison et fournitures de mise en œuvre sur devis séparé. Quantités calculées avec marge
-      de coupe ; les carreaux d'un même bain de fabrication sont réservés à la commande.
-      Acompte de 30 % à la commande, solde à la mise à disposition.
-    </div>
-    <div class="signature">
-      <b>Bon pour accord</b>
-      <span>Date et signature, précédées de la mention « bon pour accord »</span>
-    </div>
-  </div>`;
-    ouvrir(gabarit(`Devis ${d.id}`, corps));
+    y = blocTotaux(doc, y + 2, 'Total TTC fourniture', sousTotal, d.remisePct, totalDevis(d));
+
+    /* Notes éventuelles */
+    if (d.notes) {
+        doc.setFillColor(...CREME);
+        const lignesNotes = doc.splitTextToSize(d.notes, DROITE - M - 14);
+        const hNotes = lignesNotes.length * 4 + 7;
+        doc.roundedRect(M, y + 2, DROITE - M, hNotes, 2, 2, 'F');
+        doc.setFillColor(...AMBRE);
+        doc.rect(M, y + 2, 1.4, hNotes, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...ENCRE);
+        doc.text(lignesNotes, M + 6, y + 8, { lineHeightFactor: 1.5 });
+        y += hNotes + 4;
+    }
+
+    /* Conditions (gauche) + Bon pour accord (droite) */
+    const yBas = Math.max(y + 8, 218);
+    conditions(
+        doc, yBas, 'Conditions',
+        'Devis valable 60 jours à compter de sa date d’édition. Prix TTC, fourniture seule — pose, livraison et fournitures de mise en œuvre sur devis séparé. Quantités calculées avec marge de coupe ; les carreaux d’un même bain de fabrication sont réservés à la commande. Acompte de 30 % à la commande, solde à la mise à disposition.',
+        102
+    );
+    const xSig = M + 112;
+    doc.setDrawColor(...AMBRE);
+    doc.setLineWidth(0.4);
+    doc.setLineDashPattern([1.6, 1.4], 0);
+    doc.roundedRect(xSig, yBas - 4, DROITE - xSig, 34, 2.5, 2.5, 'S');
+    doc.setLineDashPattern([], 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.6);
+    doc.setTextColor(...AMBRE_F);
+    doc.setCharSpace(0.7);
+    doc.text('BON POUR ACCORD', xSig + 5, yBas + 1);
+    doc.setCharSpace(0);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...TAUPE);
+    doc.text(doc.splitTextToSize('Date et signature, précédées de la mention « bon pour accord »', DROITE - xSig - 10), xSig + 5, yBas + 5.5, { lineHeightFactor: 1.4 });
+
+    pied(doc);
+    ouvrir(doc, `Devis ${d.id} — ${LEGAL.denomination}`);
 }
 
+/* ============================== FACTURE ============================== */
+
 export function exporterFacturePdf(f: Facture) {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    entete(doc);
+
+    /* Titre + cartouche d'infos avec pastille de statut */
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(...ENCRE);
+    doc.text('Facture', M, 44);
+    doc.setTextColor(...AMBRE_F);
+    doc.text(f.id, M + doc.getTextWidth('Facture ') + 1, 44);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...TAUPE);
+    doc.text(`Émise le ${f.date} · réf. devis ${f.devisId}`, DROITE, 39.5, { align: 'right' });
+    const reglee = f.statut === 'Réglée';
+    const wBadge = doc.getTextWidth(f.statut.toUpperCase()) + 10;
+    doc.setFillColor(...(reglee ? VERT_BG : AMBRE_BG));
+    doc.roundedRect(DROITE - wBadge, 42, wBadge, 6.5, 3.2, 3.2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...(reglee ? VERT : AMBRE_F));
+    doc.setCharSpace(0.5);
+    doc.text(f.statut.toUpperCase(), DROITE - wBadge / 2, 46.3, { align: 'center' });
+    doc.setCharSpace(0);
+
+    /* Blocs facturé à / règlement */
+    const largBloc = (DROITE - M - 6) / 2;
+    blocInfo(doc, M, largBloc, 52, 'Facturé à', f.client, f.email || '');
+    blocInfo(doc, M + largBloc + 6, largBloc, 52, 'Règlement', 'Showroom (CB, chèque) ou virement', 'RIB sur demande');
+
+    /* Lignes + totaux */
+    let y = tableauLignes(doc, 79, f.lignes);
     const sousTotal = f.lignes.reduce((t, l) => t + l.surface * l.prix, 0);
-    const corps = `
-  <div class="titre-row">
-    <h1>Facture <span class="num">${esc(f.id)}</span></h1>
-    <div class="infos">
-      Émise le <b>${esc(f.date)}</b> · réf. devis <b>${esc(f.devisId)}</b><br>
-      <span class="badge ${f.statut === 'Réglée' ? 'ok' : 'warn'}">${esc(f.statut)}</span>
-    </div>
-  </div>
-  <div class="blocs">
-    <div class="bloc"><b>Facturé à</b><span class="qui">${esc(f.client)}</span>${f.email ? `${esc(f.email)}` : ''}</div>
-    <div class="bloc"><b>Règlement</b>Au showroom (CB, chèque)<br>ou par virement — RIB sur demande</div>
-  </div>
-  ${tableauLignes(f.lignes)}
-  ${blocTotaux('Total TTC', sousTotal, f.remisePct, f.total)}
-  <div class="bas">
-    <div class="conditions">
-      <b>Conditions de règlement</b>
-      Paiement à réception. En cas de retard, pénalités au taux légal et indemnité forfaitaire de
-      recouvrement de 40 € (art. L441-10 C. com.). Pas d'escompte pour paiement anticipé.
-      Les marchandises restent la propriété de ${esc(LEGAL.denomination)} jusqu'au paiement
-      intégral (clause de réserve de propriété).
-    </div>
-  </div>`;
-    ouvrir(gabarit(`Facture ${f.id}`, corps));
+    y = blocTotaux(doc, y + 2, 'Total TTC', sousTotal, f.remisePct, f.total);
+
+    /* Conditions de règlement */
+    conditions(
+        doc, Math.max(y + 10, 232), 'Conditions de règlement',
+        `Paiement à réception. En cas de retard, pénalités au taux légal et indemnité forfaitaire de recouvrement de 40 € (art. L441-10 C. com.). Pas d’escompte pour paiement anticipé. Les marchandises restent la propriété de ${LEGAL.denomination} jusqu’au paiement intégral (clause de réserve de propriété).`,
+        DROITE - M
+    );
+
+    pied(doc);
+    ouvrir(doc, `Facture ${f.id} — ${LEGAL.denomination}`);
 }
