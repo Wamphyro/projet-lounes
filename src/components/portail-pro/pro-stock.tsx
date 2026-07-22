@@ -93,11 +93,13 @@ export function ProStock() {
                         <b> Cette fonction arrive avec le branchement du backend</b> (Cloud Function d&rsquo;extraction) ;
                         en attendant, la saisie manuelle fait le même travail.
                     </p>
-                    <div className="field" style={{ maxWidth: 420 }}>
-                        <label htmlFor="bl-fichier">Fichier du BL (photo ou PDF)</label>
-                        <input id="bl-fichier" type="file" accept=".pdf,.jpg,.jpeg,.png" disabled />
-                    </div>
-                    <div style={{ marginTop: 16 }}>
+                    <label className="dropzone disabled">
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" disabled />
+                        <span className="dz-ico" aria-hidden="true">⇪</span>
+                        <span className="dz-main">Déposez le BL ici, ou cliquez pour choisir</span>
+                        <span className="dz-sub">PDF, JPG ou PNG — disponible avec le branchement de l&rsquo;IA</span>
+                    </label>
+                    <div style={{ marginTop: 18 }}>
                         <button className="btn" onClick={() => setPanneau('manuel')}>Passer en saisie manuelle</button>
                     </div>
                 </div>

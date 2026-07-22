@@ -9,9 +9,11 @@ import { SITE } from '@/lib/site-config';
  *   2. créneaux horaires du jour choisi
  *   3. coordonnées + confirmation
  *
- * SANS BACKEND pour l'instant : la confirmation ouvre un email pré-rempli.
- * Pour passer en réservation réelle : remplacer `confirmer()` par un appel
- * Firestore/Cloud Function — l'UI et l'état ne bougent pas.
+ * Deux modes :
+ *  - SITE (défaut) : coordonnées demandées, confirmation par email pré-rempli ;
+ *  - PORTAIL (`onConfirm` fourni) : le client est connecté → pas de coordonnées,
+ *    la réservation est remise au parent (ajout direct à « Mes rendez-vous »).
+ * Le branchement Firestore/CF remplacera ces deux issues sans toucher l'UI.
  */
 
 const CRENEAUX_MATIN = ['09:00', '10:00', '11:00'];
@@ -20,7 +22,12 @@ const DOW = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const JOURS_LONG = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
-export function BookingCalendar() {
+export function BookingCalendar({
+    onConfirm,
+}: {
+    /** Mode portail : appelé à la confirmation (le parent gère l'ajout + le message). */
+    onConfirm?: (rdv: { date: string; heure: string }) => void;
+} = {}) {
     const { demain, max } = useMemo(() => {
         const t = new Date();
         t.setHours(0, 0, 0, 0);
@@ -60,7 +67,14 @@ export function BookingCalendar() {
     const libelle = (d: Date) => `${JOURS_LONG[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`;
 
     const confirmer = () => {
-        if (!date || !creneau || !nom) return;
+        if (!date || !creneau) return;
+        if (onConfirm) {
+            /* Mode portail : le client est connecté, la réservation part telle quelle. */
+            onConfirm({ date: libelle(date), heure: creneau });
+            setEnvoye(true);
+            return;
+        }
+        if (!nom) return;
         const sujet = `Rendez-vous showroom — ${libelle(date)} à ${creneau}`;
         const corps = [
             'Bonjour,', '',
@@ -79,10 +93,10 @@ export function BookingCalendar() {
     const etape = envoye ? 4 : creneau ? 3 : date ? 2 : 1;
 
     return (
-        <div data-reveal>
+        <div>
             {/* Indicateur d'étapes */}
             <div className="booking-steps">
-                {['Choisir un jour', 'Choisir une heure', 'Vos coordonnées'].map((label, i) => (
+                {['Choisir un jour', 'Choisir une heure', onConfirm ? 'Confirmer' : 'Vos coordonnées'].map((label, i) => (
                     <span key={label} className={`bstep${etape === i + 1 ? ' current' : ''}${etape > i + 1 ? ' done' : ''}`}>
                         <span className="n">{etape > i + 1 ? '✓' : i + 1}</span>
                         {label}
@@ -154,23 +168,27 @@ export function BookingCalendar() {
 
                             {creneau && (
                                 <>
-                                    <div className="field" style={{ marginBottom: 14 }}>
-                                        <label htmlFor="b-nom">Nom et prénom *</label>
-                                        <input id="b-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Votre nom" />
-                                    </div>
-                                    <div className="form-grid">
-                                        <div className="field">
-                                            <label htmlFor="b-tel">Téléphone</label>
-                                            <input id="b-tel" type="tel" value={tel} onChange={(e) => setTel(e.target.value)} placeholder="06 …" />
-                                        </div>
-                                        <div className="field">
-                                            <label htmlFor="b-email">Email</label>
-                                            <input id="b-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" />
-                                        </div>
-                                    </div>
+                                    {!onConfirm && (
+                                        <>
+                                            <div className="field" style={{ marginBottom: 14 }}>
+                                                <label htmlFor="b-nom">Nom et prénom *</label>
+                                                <input id="b-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Votre nom" />
+                                            </div>
+                                            <div className="form-grid">
+                                                <div className="field">
+                                                    <label htmlFor="b-tel">Téléphone</label>
+                                                    <input id="b-tel" type="tel" value={tel} onChange={(e) => setTel(e.target.value)} placeholder="06 …" />
+                                                </div>
+                                                <div className="field">
+                                                    <label htmlFor="b-email">Email</label>
+                                                    <input id="b-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                     <div style={{ marginTop: 20 }}>
-                                        <button className="btn" onClick={confirmer} disabled={!nom} style={{ width: '100%', justifyContent: 'center' }}>
-                                            Confirmer — {libelle(date)} à {creneau}
+                                        <button className="btn" onClick={confirmer} disabled={!onConfirm && !nom} style={{ width: '100%', justifyContent: 'center' }}>
+                                            {onConfirm ? 'Réserver' : 'Confirmer'} — {libelle(date)} à {creneau}
                                         </button>
                                     </div>
                                 </>
@@ -180,8 +198,13 @@ export function BookingCalendar() {
 
                     {envoye && (
                         <div className="form-ok">
-                            <b>Demande de rendez-vous préparée !</b> Votre messagerie s&rsquo;est ouverte avec
-                            le récapitulatif — envoyez l&rsquo;email, nous confirmons votre créneau sous 24 h ouvrées.
+                            {onConfirm ? (
+                                <><b>Créneau réservé !</b> Il apparaît dans vos rendez-vous ci-dessus —
+                                nous le confirmons sous 24 h ouvrées.</>
+                            ) : (
+                                <><b>Demande de rendez-vous préparée !</b> Votre messagerie s&rsquo;est ouverte avec
+                                le récapitulatif — envoyez l&rsquo;email, nous confirmons votre créneau sous 24 h ouvrées.</>
+                            )}
                         </div>
                     )}
                 </div>

@@ -137,6 +137,18 @@ const DEMANDES_SEED: Demande[] = [
     { id: 'DEM-111', type: 'Devis', contact: 'SCI Les Remparts — contact@remparts.fr', detail: 'Projet pro : 12 salles d’eau, marbre + zellige', date: '19/07/2026', traitee: true },
 ];
 
+/** Rendez-vous showroom du client (réservables depuis le site OU le portail). */
+export type Rdv = {
+    date: string;
+    heure: string;
+    objet: string;
+    statut: 'Confirmé' | 'En attente de confirmation';
+};
+
+const RDV_SEED: Rdv[] = [
+    { date: 'Samedi 26 juillet 2026', heure: '10:00', objet: 'Choix des finitions — salle de bain', statut: 'Confirmé' },
+];
+
 /** Réception de stock (bon de livraison fournisseur). */
 export type LigneReception = { slug: string; nom: string; quantite: number };
 export type Reception = {
@@ -214,6 +226,7 @@ export const useCommandes = () => useCollection<Commande[]>('dc-commandes', COMM
 export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDES_SEED);
 export const useStock = () => useCollection<Record<string, number>>('dc-stock', STOCK_INITIAL);
 export const useReceptions = () => useCollection<Reception[]>('dc-receptions', RECEPTIONS_SEED);
+export const useRdv = () => useCollection<Rdv[]>('dc-rdv', RDV_SEED);
 
 /** Prochain numéro de réception (REC-XXX). */
 export const prochainIdReception = (receptions: Reception[]) => {

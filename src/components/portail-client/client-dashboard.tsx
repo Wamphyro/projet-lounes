@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useDevis, useCommandes, totalDevis, CLIENT_DEMO_NOM } from '@/services/commerce';
-import { RDV_CLIENT, ECHANTILLONS_CLIENT } from '@/services/demo-data';
+import { useDevis, useCommandes, useRdv, totalDevis, CLIENT_DEMO_NOM } from '@/services/commerce';
+import { ECHANTILLONS_CLIENT } from '@/services/demo-data';
 
 /** Tableau de bord client — les éléments de Julie Morel (compte démo). */
 export function ClientDashboard() {
     const [devis] = useDevis();
     const [commandes] = useCommandes();
+    const [rdv] = useRdv();
 
     const mesDevis = devis.filter((d) => d.client === CLIENT_DEMO_NOM && d.statut !== 'Brouillon');
     const mesCommandes = commandes.filter((c) => c.client === CLIENT_DEMO_NOM);
@@ -20,7 +21,7 @@ export function ClientDashboard() {
                     <h1 className="portal-title">Bonjour {CLIENT_DEMO_NOM.split(' ')[0]},</h1>
                     <p className="portal-sub">Votre suivi DEKA CERAM, au même endroit.</p>
                 </div>
-                <Link href="/rendez-vous/" className="btn">Prendre rendez-vous</Link>
+                <Link href="/espace-client/rendez-vous/" className="btn">Prendre rendez-vous</Link>
             </div>
 
             {aValider.length > 0 && (
@@ -33,7 +34,7 @@ export function ClientDashboard() {
             <div className="tiles">
                 <div className="tile"><div className="val">{mesCommandes.length}</div><div className="lbl">Commandes</div></div>
                 <div className="tile"><div className="val">{aValider.length}</div><div className="lbl">Devis à valider</div></div>
-                <div className="tile"><div className="val">{RDV_CLIENT.length}</div><div className="lbl">Rendez-vous à venir</div></div>
+                <div className="tile"><div className="val">{rdv.length}</div><div className="lbl">Rendez-vous à venir</div></div>
                 <div className="tile"><div className="val">{ECHANTILLONS_CLIENT.length}</div><div className="lbl">Échantillons chez vous</div></div>
             </div>
 
