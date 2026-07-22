@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import { useFactures, FACTURE_STATUTS, type FactureStatut } from '@/services/commerce';
+import { exporterFacturePdf } from '@/services/document-pdf';
 
 /** Factures (équipe) — issues des devis acceptés, statut À régler / Réglée. */
 
@@ -86,9 +87,14 @@ export function ProFactures() {
                                 </tfoot>
                             </table>
 
-                            <p style={{ fontSize: 13, color: 'var(--taupe)' }}>
-                                L&rsquo;export PDF et l&rsquo;envoi par email arriveront avec le backend (Cloud Function).
-                            </p>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button className="btn dark" onClick={() => exporterFacturePdf(sel)}>
+                                    Exporter en PDF
+                                </button>
+                                <span style={{ fontSize: 13, color: 'var(--taupe)' }}>
+                                    L&rsquo;envoi automatique par email arrivera avec le backend.
+                                </span>
+                            </div>
                         </div>
                     )}
                 </div>

@@ -16,7 +16,7 @@ import { TOUTES_VARIANTES, variantesDeProduit, type Produit } from '@/lib/catalo
 
 /* ============================== Types ============================== */
 
-export type DevisStatut = 'Brouillon' | 'Envoyé' | 'Accepté' | 'Refusé';
+export type DevisStatut = 'Brouillon' | 'Envoyé' | 'Accepté' | 'Refusé' | 'Facturé';
 export type LigneDevis = { slug: string; nom: string; prix: number; surface: number };
 export type Devis = {
     id: string;
@@ -49,7 +49,11 @@ export type Demande = {
     traitee: boolean;
 };
 
-export const DEVIS_STATUTS: DevisStatut[] = ['Brouillon', 'Envoyé', 'Accepté', 'Refusé'];
+/* Cycle de vie d'un devis : Brouillon → Envoyé → Accepté/Refusé → Facturé.
+   « Facturé » n'est jamais choisi à la main : il est posé par la transformation
+   en facture, puis le statut est verrouillé (cohérence devis ↔ factures). */
+export const DEVIS_STATUTS: DevisStatut[] = ['Brouillon', 'Envoyé', 'Accepté', 'Refusé', 'Facturé'];
+export const DEVIS_STATUTS_MANUELS: DevisStatut[] = ['Brouillon', 'Envoyé', 'Accepté', 'Refusé'];
 export const COMMANDE_STATUTS: CommandeStatut[] = ['En préparation', 'Prête au retrait', 'En livraison', 'Livrée'];
 
 export const totalDevis = (d: Devis) =>
@@ -79,7 +83,7 @@ const DEVIS_SEED: Devis[] = [
         client: 'M. Roussel',
         email: 'roussel@mail.fr',
         date: '11/07/2026',
-        statut: 'Accepté',
+        statut: 'Facturé',
         remisePct: 0,
         lignes: [
             { slug: 'travertin-classique', nom: 'Travertin Classique (opus)', prix: 85, surface: 74 },

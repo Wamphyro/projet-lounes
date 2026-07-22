@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useFactures, CLIENT_DEMO_NOM, type FactureStatut } from '@/services/commerce';
 import { SITE } from '@/lib/site-config';
+import { exporterFacturePdf } from '@/services/document-pdf';
 
 /** Factures (client) — miroir : les factures émises par l'équipe pour ce client. */
 
@@ -73,6 +74,11 @@ export function ClientFactures() {
                                 </tfoot>
                             </table>
 
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: sel.statut === 'À régler' ? 14 : 0 }}>
+                                <button className="btn dark" onClick={() => exporterFacturePdf(sel)}>
+                                    Télécharger en PDF
+                                </button>
+                            </div>
                             {sel.statut === 'À régler' && (
                                 <p style={{ fontSize: 14, color: 'var(--ambre-fonce)', fontWeight: 600 }}>
                                     Règlement au showroom (CB, chèque) ou par virement — RIB sur demande au {SITE.phone}.

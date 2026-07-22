@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useDevis, totalDevis, CLIENT_DEMO_NOM, type DevisStatut } from '@/services/commerce';
+import { exporterDevisPdf } from '@/services/document-pdf';
 
 /**
  * Devis (client) — miroir du store partagé : le client voit les devis émis
@@ -10,7 +12,7 @@ import { useDevis, totalDevis, CLIENT_DEMO_NOM, type DevisStatut } from '@/servi
  */
 
 const tone = (s: DevisStatut) =>
-    s === 'Accepté' ? 'ok' : s === 'Envoyé' ? 'warn' : s === 'Refusé' ? 'bad' : 'off';
+    s === 'Accepté' ? 'ok' : s === 'Envoyé' ? 'warn' : s === 'Refusé' ? 'bad' : s === 'Facturé' ? 'info' : 'off';
 
 export function ClientDevis() {
     const [devis, setDevis] = useDevis();
@@ -91,15 +93,26 @@ export function ClientDevis() {
                                 </p>
                             )}
 
-                            {sel.statut === 'Envoyé' && (
-                                <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-                                    <button className="btn" onClick={() => decider(sel.id, 'Accepté')}>Accepter ce devis</button>
-                                    <button className="btn dark" onClick={() => decider(sel.id, 'Refusé')}>Refuser</button>
-                                </div>
-                            )}
+                            <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+                                {sel.statut === 'Envoyé' && (
+                                    <>
+                                        <button className="btn" onClick={() => decider(sel.id, 'Accepté')}>Accepter ce devis</button>
+                                        <button className="btn dark" onClick={() => decider(sel.id, 'Refusé')}>Refuser</button>
+                                    </>
+                                )}
+                                <button className={sel.statut === 'Envoyé' ? 'btn-x' : 'btn dark'} style={sel.statut === 'Envoyé' ? { textDecoration: 'underline' } : undefined} onClick={() => exporterDevisPdf(sel)}>
+                                    Télécharger en PDF
+                                </button>
+                            </div>
                             {sel.statut === 'Accepté' && (
                                 <p style={{ fontSize: 14, color: '#3e6e34', fontWeight: 600, marginTop: 16 }}>
                                     Devis accepté — nous vous contactons pour planifier la suite. Merci !
+                                </p>
+                            )}
+                            {sel.statut === 'Facturé' && (
+                                <p style={{ fontSize: 14, marginTop: 16 }}>
+                                    Ce devis a été facturé — retrouvez la facture dans{' '}
+                                    <Link href="/espace-client/factures/" style={{ textDecoration: 'underline', fontWeight: 600 }}>Mes factures</Link>.
                                 </p>
                             )}
                         </div>
