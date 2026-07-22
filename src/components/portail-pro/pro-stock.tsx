@@ -75,8 +75,9 @@ export function ProStock() {
         setFBl(''); setFFour(''); setFLignes([]); setPanneau('ferme');
     };
 
-    const ajuster = (ref: string, delta: number) =>
-        setStock({ ...stock, [ref]: Math.max(0, (stock[ref] ?? 0) + delta) });
+    /* Pas d'ajustement manuel du stock : toute entrée passe par une réception
+       de BL (traçée). Les sorties viendront des commandes, et les corrections
+       d'inventaire (avec motif obligatoire) arriveront avec le backend. */
 
     return (
         <>
@@ -228,7 +229,7 @@ export function ProStock() {
                     <div className="table-scroll" style={{ marginTop: 16 }}>
                         <table className="data-table">
                             <thead>
-                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Stock (m²)</th><th>État</th><th>Ajuster</th></tr>
+                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Stock (m²)</th><th>État</th></tr>
                             </thead>
                             <tbody>
                                 {selVariantes.map((v) => {
@@ -244,18 +245,16 @@ export function ProStock() {
                                                     : s < SEUIL_STOCK ? <span className="pill warn">Réappro</span>
                                                     : <span className="pill ok">OK</span>}
                                             </td>
-                                            <td>
-                                                <span className="stock-btns">
-                                                    <button onClick={() => ajuster(v.ref, -10)} aria-label={`Retirer 10 m² de ${v.ref}`}>−</button>
-                                                    <button onClick={() => ajuster(v.ref, 10)} aria-label={`Ajouter 10 m² à ${v.ref}`}>+</button>
-                                                </span>
-                                            </td>
                                         </tr>
                                     );
                                 })}
                             </tbody>
                         </table>
                     </div>
+                    <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 12 }}>
+                        Le stock n&rsquo;est modifiable que par réception de BL (traçée). Les corrections
+                        d&rsquo;inventaire avec motif arriveront avec le backend.
+                    </p>
                 </div>
             </div>
 
