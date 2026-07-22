@@ -1,16 +1,14 @@
 import type { Metadata } from 'next';
 import { PageHero } from '@/components/page-hero';
-import { SITE } from '@/lib/site-config';
+import { SITE, LEGAL } from '@/lib/site-config';
 
 export const metadata: Metadata = {
     title: 'Mentions légales',
-    description: 'Mentions légales du site DEKA CÉRAM.',
+    description: 'Mentions légales du site DEKA CERAM.',
 };
 
-/*
- * PLACEHOLDERS à remplacer par les éléments des statuts de la société
- * (raison sociale, forme, capital, SIREN/RCS, siège, directeur de publication).
- */
+/* Informations issues des statuts SAS du 22/07/2026. Le numéro SIREN et la
+   TVA intracommunautaire seront ajoutés dès réception de l'immatriculation. */
 export default function MentionsLegalesPage() {
     return (
         <>
@@ -23,11 +21,15 @@ export default function MentionsLegalesPage() {
                 <div className="wrap prose">
                     <h2>Éditeur du site</h2>
                     <p>
-                        <b>DEKA CÉRAM</b> — [forme juridique] au capital de [capital] €<br />
-                        Siège social : {SITE.address}, [code postal, ville]<br />
-                        RCS : [ville] [SIREN] — TVA intracommunautaire : [FR…]<br />
-                        Téléphone : {SITE.phone} — Email : {SITE.email}<br />
-                        Directeur de la publication : [nom du gérant]
+                        <b>{LEGAL.denomination}</b> — {LEGAL.forme} au capital de {LEGAL.capital}
+                        <br />
+                        Siège social : {LEGAL.siege}
+                        <br />
+                        {LEGAL.rcs} — numéro SIREN et TVA intracommunautaire en cours d&rsquo;attribution
+                        <br />
+                        Téléphone : {SITE.phone} — Email : {SITE.email}
+                        <br />
+                        Directeur de la publication : {LEGAL.president}, Président
                     </p>
                     <h2>Hébergement</h2>
                     <p>

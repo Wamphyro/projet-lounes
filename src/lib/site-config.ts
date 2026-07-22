@@ -10,10 +10,20 @@ export const SITE = {
     tagline: 'Carrelage & pierre naturelle. Showroom, conseil et pose sur mesure.',
     description:
         'Grès cérame, marbre, terrazzo et pierres d’exception, sélectionnés pour les intérieurs qui ne ressemblent à aucun autre. Showroom sur rendez-vous.',
-    phone: '03 80 00 00 00',
-    email: 'bonjour@dekaceram.fr',
-    address: '12 rue des Artisans',
+    phone: '03 80 00 00 00', // placeholder — en attente du vrai numéro
+    email: 'bonjour@dekaceram.fr', // placeholder — en attente de la vraie adresse
+    address: '41 Route de Dijon, 21110 Thorey-en-Plaine',
     hours: 'Du mardi au samedi',
+};
+
+/** Informations légales (statuts SAS du 22/07/2026). */
+export const LEGAL = {
+    denomination: 'DEKA CERAM',
+    forme: 'Société par actions simplifiée (SAS)',
+    capital: '1 000 €',
+    siege: '41 Route de Dijon — 21110 Thorey-en-Plaine',
+    rcs: 'En cours d’immatriculation au RCS de Dijon',
+    president: 'Lounès Dekkiche',
 };
 
 export const SITE_URL = 'https://deka-ceram.web.app';
