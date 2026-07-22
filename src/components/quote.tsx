@@ -9,7 +9,7 @@ export function Quote() {
             </div>
             <blockquote data-reveal>
                 « Le luxe, c&rsquo;est la matière juste, posée au bon endroit. »
-                <cite>TERRA — Atelier & Showroom</cite>
+                <cite>DEKA CÉRAM — Atelier & Showroom</cite>
             </blockquote>
         </section>
     );

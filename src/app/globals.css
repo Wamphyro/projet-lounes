@@ -73,9 +73,17 @@ body::before {
     transition: background .4s ease, backdrop-filter .4s ease, border-color .4s ease;
     border-bottom: 1px solid transparent;
 }
-/* Au démarrage : texte foncé lisible sur le hero sable */
-.nav .brand { font-family: var(--serif); font-size: 23px; font-weight: 600; letter-spacing: .04em; color: var(--encre); transition: color .4s ease; }
-.nav .brand span { color: var(--ambre); }
+/* Logo DEKA CÉRAM : monogramme DC (SVG, currentColor) | wordmark espacé */
+.logo { display: inline-flex; align-items: center; gap: 14px; color: inherit; }
+.logo .mark { height: 34px; width: auto; display: block; }
+.logo .sep { width: 1px; height: 26px; background: currentColor; opacity: .4; }
+.logo .word {
+    font-family: var(--sans); font-size: 15px; font-weight: 600;
+    letter-spacing: .26em; text-transform: uppercase; white-space: nowrap;
+}
+
+/* Texte foncé lisible sur le hero sable comme sur la barre crème */
+.nav .brand { color: var(--encre); transition: color .4s ease; }
 .nav-links { display: flex; gap: 34px; list-style: none; }
 .nav-links a { font-size: 14px; font-weight: 500; color: rgba(42, 36, 29, .72); transition: color .2s ease; }
 .nav-links a:hover { color: var(--encre); }
@@ -322,8 +330,9 @@ body::before {
    ============================================================ */
 .footer { background: var(--sable); padding: 72px 0 40px; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 48px; border-bottom: 1px solid var(--ligne); }
-.footer .brand { font-family: var(--serif); font-size: 27px; font-weight: 600; }
-.footer .brand span { color: var(--ambre); }
+.footer .brand { color: var(--encre); }
+.footer .brand .mark { height: 42px; }
+.footer .brand .word { font-size: 16px; }
 .footer .tag { color: var(--taupe); font-size: 15px; margin-top: 12px; max-width: 260px; }
 .footer h4 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--taupe); margin-bottom: 16px; }
 .footer ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
@@ -358,6 +367,8 @@ body::before {
 @media (max-width: 640px) {
     .nav-links, .nav > .btn { display: none; }
     .burger { display: flex; }
+    .logo .word { font-size: 12px; letter-spacing: .18em; }
+    .logo .mark { height: 28px; }
     .grid { grid-template-columns: 1fr; }
     .card, .card.feature { grid-column: auto; aspect-ratio: 3/4; }
     .footer-grid { grid-template-columns: 1fr; }

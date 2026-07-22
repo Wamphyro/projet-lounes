@@ -1,6 +1,6 @@
 {
     "hosting": {
-        "site": "terra-lounes",
+        "site": "deka-ceram",
         "public": "out",
         "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
         "cleanUrls": true

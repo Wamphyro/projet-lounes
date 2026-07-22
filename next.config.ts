@@ -1,9 +1,9 @@
 import type { NextConfig } from 'next';
 
 /**
- * Site vitrine « TERRA » — carrelage & pierre naturelle.
- * Export statique déployé sur Firebase Hosting (projet nexio-db, site terra-lounes) :
- *   https://terra-lounes.web.app
+ * Site vitrine « DEKA CÉRAM » — carrelage & pierre naturelle.
+ * Export statique déployé sur Firebase Hosting (projet nexio-db, site deka-ceram) :
+ *   https://deka-ceram.web.app
  * Pas de basePath : Firebase sert le site à la racine.
  */
 const config: NextConfig = {

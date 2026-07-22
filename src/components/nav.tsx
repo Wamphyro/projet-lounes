@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { NAV_LINKS } from '@/lib/site-config';
+import { Logo } from '@/components/logo';
 
 /**
  * Navigation fixe : transparente sur le hero, puis fond crème flouté
@@ -21,8 +22,8 @@ export function Nav() {
     return (
         <>
             <nav className={`nav${scrolled ? ' is-scrolled' : ''}`}>
-                <a href="#accueil" className="brand">
-                    TERRA<span>.</span>
+                <a href="#accueil" className="brand" aria-label="DEKA CÉRAM — accueil">
+                    <Logo />
                 </a>
                 <ul className="nav-links">
                     {NAV_LINKS.map((l) => (

@@ -1,4 +1,5 @@
 import { SITE, NAV_LINKS } from '@/lib/site-config';
+import { Logo } from '@/components/logo';
 
 /** Pied de page — marque, colonnes de liens, mentions. */
 export function Footer() {
@@ -8,7 +9,7 @@ export function Footer() {
                 <div className="footer-grid">
                     <div>
                         <div className="brand">
-                            TERRA<span>.</span>
+                            <Logo />
                         </div>
                         <p className="tag">{SITE.tagline}</p>
                     </div>

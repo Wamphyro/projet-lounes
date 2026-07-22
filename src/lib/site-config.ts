@@ -1,22 +1,22 @@
 /**
- * Configuration centrale du site TERRA.
+ * Configuration centrale du site DEKA CÉRAM.
  * Toute la copie et les données (collections, specs, chiffres, réalisations)
  * vivent ici : les composants ne font que mapper ces tableaux.
  * Ajouter une matière = ajouter une entrée + une classe .mat-* dans globals.css.
  */
 
 export const SITE = {
-    name: 'TERRA',
+    name: 'DEKA CÉRAM',
     tagline: 'Carrelage & pierre naturelle. Showroom, conseil et pose sur mesure.',
     description:
         'Grès cérame, marbre, terrazzo et pierres d’exception, sélectionnés pour les intérieurs qui ne ressemblent à aucun autre. Showroom sur rendez-vous.',
     phone: '03 80 00 00 00',
-    email: 'bonjour@terra.fr',
+    email: 'bonjour@dekaceram.fr',
     address: '12 rue des Artisans',
     hours: 'Du mardi au samedi',
 };
 
-export const SITE_URL = 'https://terra-lounes.web.app';
+export const SITE_URL = 'https://deka-ceram.web.app';
 
 /** Liens de la navigation (ancres de la mono-page). */
 export const NAV_LINKS = [

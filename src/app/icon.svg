@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 100">
+  <!-- Favicon : monogramme DC de DEKA CÉRAM (version statique du composant Logo) -->
+  <defs>
+    <clipPath id="bas"><rect x="0" y="55" width="112" height="45"/></clipPath>
+    <clipPath id="haut"><rect x="0" y="0" width="112" height="55"/></clipPath>
+    <mask id="mask-d">
+      <rect width="112" height="100" fill="white"/>
+      <path d="M101.1 38.9 A27 27 0 1 0 101.1 77.1" fill="none" stroke="black" stroke-width="17" clip-path="url(#bas)"/>
+    </mask>
+    <mask id="mask-c">
+      <rect width="112" height="100" fill="white"/>
+      <path d="M24 15 H44 A35 35 0 0 1 44 85 H24 Z" fill="none" stroke="black" stroke-width="17" clip-path="url(#haut)"/>
+    </mask>
+  </defs>
+  <path d="M24 15 H44 A35 35 0 0 1 44 85 H24 Z" fill="none" stroke="#2A241D" stroke-width="9" mask="url(#mask-d)"/>
+  <path d="M101.1 38.9 A27 27 0 1 0 101.1 77.1" fill="none" stroke="#2A241D" stroke-width="9" mask="url(#mask-c)"/>
+</svg>
