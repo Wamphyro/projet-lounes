@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { PageHero } from '@/components/page-hero';
 import { FAMILLES, produitsDeFamille } from '@/lib/catalogue';
+import { MATIERE_PHOTOS } from '@/lib/matiere-photos';
 
 export const metadata: Metadata = {
     title: 'Collections',
@@ -29,10 +31,9 @@ export default function CollectionsPage() {
                                 className={`card${i === 0 ? ' feature' : ''}`}
                                 data-reveal
                             >
-                                <div
-                                    className={`surface ${f.texture}`}
-                                    style={f.filtre ? { filter: f.filtre } : undefined}
-                                ></div>
+                                <div className="surface photo">
+                                    <Image src={MATIERE_PHOTOS[f.slug]} alt={f.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                </div>
                                 <div className="caption">
                                     <h3>{f.nom}</h3>
                                     <span>

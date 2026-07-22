@@ -37,12 +37,12 @@ export const NAV_LINKS = [
     { href: '/showroom/', label: 'Showroom' },
 ] as const;
 
-/** Collections mises en avant sur l'accueil — chaque `matiere` correspond à
-    une classe .mat-* (texture CSS), `href` pointe vers la page famille. */
+/** Collections mises en avant sur l'accueil — `photo` référence une entrée de
+    MATIERE_PHOTOS (lib/matiere-photos.ts), `href` pointe vers la page famille. */
 export type Collection = {
     nom: string;
     sousTitre: string;
-    matiere: 'mat-marbre' | 'mat-gres' | 'mat-terrazzo' | 'mat-zellige' | 'mat-pierre';
+    photo: string;
     href: string;
     feature?: boolean;
 };
@@ -51,14 +51,14 @@ export const COLLECTIONS: Collection[] = [
     {
         nom: 'Grès cérame grand format',
         sousTitre: 'Effet marbre, béton & pierre — jusqu’à 120×280 cm',
-        matiere: 'mat-marbre',
+        photo: 'gres-cerame',
         href: '/collections/gres-cerame/',
         feature: true,
     },
-    { nom: 'Effet marbre foncé', sousTitre: 'Emperador, Sahara Noir', matiere: 'mat-gres', href: '/collections/gres-cerame/' },
-    { nom: 'Terrazzo', sousTitre: 'Éclats de marbre & résine', matiere: 'mat-terrazzo', href: '/collections/terrazzo/' },
-    { nom: 'Zellige', sousTitre: 'Émaillé à la main, Maroc', matiere: 'mat-zellige', href: '/collections/zellige/' },
-    { nom: 'Pierre de Bourgogne', sousTitre: 'Pierre naturelle & travertin', matiere: 'mat-pierre', href: '/collections/pierre-naturelle/' },
+    { nom: 'Effet marbre foncé', sousTitre: 'Emperador, Sahara Noir', photo: 'marbre-fonce', href: '/collections/gres-cerame/' },
+    { nom: 'Terrazzo', sousTitre: 'Éclats de marbre & granito', photo: 'terrazzo', href: '/collections/terrazzo/' },
+    { nom: 'Zellige', sousTitre: 'Émaillé à la main, Maroc', photo: 'zellige', href: '/collections/zellige/' },
+    { nom: 'Pierre de Bourgogne', sousTitre: 'Pierre naturelle & travertin', photo: 'pierre-naturelle', href: '/collections/pierre-naturelle/' },
 ];
 
 /** Section « Matière en grand » — liste de specs. */
