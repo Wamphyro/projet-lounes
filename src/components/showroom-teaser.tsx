@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { SITE } from '@/lib/site-config';
+import facade from '../../public/images/showroom-facade.jpg';
 
 /**
  * Section showroom de l'accueil — la façade du local en valeur (vraie photo),
@@ -12,11 +13,11 @@ export function ShowroomTeaser() {
         <section className="section">
             <div className="wrap split" data-reveal>
                 <div className="media" style={{ borderRadius: 'var(--rayon-lg)', overflow: 'hidden', boxShadow: '0 30px 60px rgba(42,36,29,.18)' }}>
+                    {/* Import statique : l'URL passe par le bundler, qui applique le
+                        basePath GitHub Pages (un src en chaîne ne l'aurait pas). */}
                     <Image
-                        src="/images/showroom-facade.jpg"
+                        src={facade}
                         alt="Le showroom DEKA CÉRAM à Thorey-en-Plaine, enseigne rétroéclairée à la tombée du jour"
-                        width={1400}
-                        height={1568}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                 </div>

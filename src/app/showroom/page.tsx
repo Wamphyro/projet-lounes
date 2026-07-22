@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PageHero } from '@/components/page-hero';
 import { SITE } from '@/lib/site-config';
+import facade from '../../../public/images/showroom-facade.jpg';
 
 export const metadata: Metadata = {
     title: 'Showroom',
@@ -52,10 +53,8 @@ export default function ShowroomPage() {
                 <div className="wrap split" data-reveal>
                     <div className="media" style={{ borderRadius: 'var(--rayon-lg)', overflow: 'hidden', boxShadow: '0 30px 60px rgba(42,36,29,.18)' }}>
                         <Image
-                            src="/images/showroom-facade.jpg"
+                            src={facade}
                             alt="La façade du showroom DEKA CÉRAM, enseigne rétroéclairée à la tombée du jour"
-                            width={1400}
-                            height={1568}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                     </div>
