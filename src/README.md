@@ -4,17 +4,22 @@ Trois « produits » cohabitent dans ce repo, strictement séparés :
 
 ```
 src/
-├── app/                    Routes Next.js (pages minces : elles assemblent, rien d'autre)
-│   ├── (site vitrine)      /, /collections, /produits, /realisations, /guide,
-│   │                       /services, /showroom, /rendez-vous, /devis, /panier, /faq, légal
-│   ├── espace-client/      PORTAIL CLIENT  (suivi commandes, devis, RDV, échantillons)
-│   └── espace-pro/         PORTAIL COLLABORATEUR (stock, commandes, demandes)
+├── app/
+│   ├── layout.tsx          Coquille commune (html, police, metadata) — AUCUN chrome
+│   ├── (site)/             SITE VITRINE — layout propre (nav, footer, reveal, JSON-LD)
+│   │   └── …               /, collections, produits, realisations, guide, services,
+│   │                       showroom, rendez-vous, devis, panier, faq, légal
+│   ├── espace-client/      PORTAIL CLIENT — application À PART (shell sidebar, à la
+│   │   └── …               nexio patient) : dashboard, devis, commandes, rdv, échantillons
+│   └── espace-pro/         PORTAIL ÉQUIPE — application À PART : dashboard, devis
+│       └── …               (création + détail), commandes (détail + suivi), stock, demandes
 │
 ├── components/
 │   ├── site/               Composants du site vitrine UNIQUEMENT
-│   ├── portail-client/     Composants du portail client UNIQUEMENT
-│   ├── portail-pro/        Composants du portail collaborateur UNIQUEMENT
-│   └── shared/             Transverses : logo, login-gate, page-hero, scroll-reveal, json-ld
+│   ├── portail-client/     Vues du portail client UNIQUEMENT
+│   ├── portail-pro/        Vues du portail équipe UNIQUEMENT
+│   └── shared/             Transverses : logo, portal-shell (gate + sidebar),
+│                           dropdown (statuts custom), page-hero, scroll-reveal, json-ld
 │
 ├── lib/                    ★ SSOT — la vérité unique des données métier
 │   ├── site-config.ts      Marque, coordonnées, infos légales (statuts), navigation
@@ -25,8 +30,10 @@ src/
 │   └── projet-photos.ts    Photos des réalisations
 │
 └── services/               ★ Couche d'accès aux données — LE point de branchement Firebase
-    ├── panier.ts           Panier projet/échantillons (impl. actuelle : localStorage)
-    └── demo-data.ts        Comptes démo + stock/commandes/demandes (impl. actuelle : fictif)
+    ├── commerce.ts         Store partagé devis/commandes/stock/demandes + hooks CRUD
+    │                       (l'équipe écrit, le client voit ses éléments en miroir)
+    ├── panier.ts           Panier projet/échantillons
+    └── demo-data.ts        Comptes démo + données client hors commerce (rdv, échantillons)
 ```
 
 ## Règles
@@ -43,10 +50,10 @@ src/
 
 | Aujourd'hui (démo) | Demain (Firebase) |
 |---|---|
+| `services/commerce.ts` → localStorage + event | Firestore `devis/`, `commandes/`, `stock/`, `demandes/` (onSnapshot) |
 | `services/panier.ts` → localStorage | Firestore `paniers/` + CF `envoyerDemande` (email) |
-| `services/demo-data.ts` stock/commandes | Firestore `stock/`, `commandes/`, `demandes/` |
-| `shared/login-gate.tsx` compte démo | Firebase Auth (email + rôles client/staff) |
+| `shared/portal-shell.tsx` gate compte démo | Firebase Auth (email + custom claims client/staff) |
 | Formulaires devis/RDV → mailto | CF `creerDemande` + notification email |
 
-Le jour du branchement : seuls `services/` et `login-gate` changent, aucune page ni
-aucun composant d'interface ne bouge.
+Le jour du branchement : seuls `services/` et la porte de connexion du
+`portal-shell` changent — aucune page ni aucune vue ne bouge.

@@ -1,14 +1,12 @@
 import type { Metadata } from 'next';
 import { Fraunces } from 'next/font/google';
 import './globals.css';
-import { Nav } from '@/components/site/nav';
-import { Footer } from '@/components/site/footer';
-import { ScrollReveal } from '@/components/shared/scroll-reveal';
-import { JsonLd } from '@/components/shared/json-ld';
 import { SITE, SITE_URL } from '@/lib/site-config';
 
-/* Fraunces auto-hébergée au build par next/font (pas de CDN runtime).
-   La variable CSS est consommée par globals.css (--serif). */
+/* Layout RACINE — uniquement la coquille commune (html, police, metadata).
+   Le chrome du site vitrine (nav, footer, reveal) vit dans (site)/layout.tsx ;
+   les portails espace-pro/ et espace-client/ ont leur propre shell applicatif. */
+
 const fraunces = Fraunces({
     subsets: ['latin'],
     style: ['normal', 'italic'],
@@ -17,7 +15,10 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-    title: `${SITE.name} — Carrelage & Pierre naturelle`,
+    title: {
+        default: `${SITE.name} — Carrelage & Pierre naturelle`,
+        template: `%s · ${SITE.name}`,
+    },
     description: SITE.description,
     metadataBase: new URL(SITE_URL),
     openGraph: {
@@ -32,13 +33,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="fr" className={fraunces.variable}>
-            <body>
-                <Nav />
-                <main>{children}</main>
-                <Footer />
-                <ScrollReveal />
-                <JsonLd />
-            </body>
+            <body>{children}</body>
         </html>
     );
 }
