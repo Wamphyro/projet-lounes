@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { Projet } from '@/lib/projets';
-import { ProxyImg } from '@/components/proxy-img';
+import { PROJET_PHOTOS } from '@/lib/projet-photos';
 
 /** Galerie de réalisations filtrable par type de projet. */
 export function ProjetFilters({ projets, types }: { projets: Projet[]; types: string[] }) {
@@ -33,7 +34,7 @@ export function ProjetFilters({ projets, types }: { projets: Projet[]; types: st
                 {visibles.map((p) => (
                     <Link key={p.slug} href={`/realisations/${p.slug}/`} className="card" data-reveal>
                         <div className="surface photo">
-                            <ProxyImg seed={p.seed} w={800} h={1000} alt={`Réalisation — ${p.titre}`} />
+                            <Image src={PROJET_PHOTOS[p.slug]} alt={`Réalisation — ${p.titre}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div className="caption">
                             <h3>{p.titre}</h3>

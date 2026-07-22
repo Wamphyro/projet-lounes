@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { PROJETS, getProjet } from '@/lib/projets';
+import { PROJET_PHOTOS } from '@/lib/projet-photos';
 import { getProduit } from '@/lib/catalogue';
 import { ProductCard } from '@/components/product-card';
-import { ProxyImg } from '@/components/proxy-img';
 
 export function generateStaticParams() {
     return PROJETS.map((p) => ({ slug: p.slug }));
@@ -34,7 +35,7 @@ export default async function ProjetPage({ params }: { params: Promise<{ slug: s
                     </nav>
                     <div className="split split-page">
                         <div className="tile-visual photo">
-                            <ProxyImg seed={projet.seed} w={900} h={1125} alt={`Réalisation — ${projet.titre}`} />
+                            <Image src={PROJET_PHOTOS[projet.slug]} alt={`Réalisation — ${projet.titre}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div>
                             <span className="eyebrow">{projet.type} · {projet.lieu} · {projet.annee}</span>

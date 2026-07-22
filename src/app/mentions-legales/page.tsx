@@ -41,7 +41,10 @@ export default function MentionsLegalesPage() {
                         de DEKA CÉRAM. Toute reproduction sans autorisation écrite préalable est interdite.
                     </p>
                     <h2>Crédits</h2>
-                    <p>Photographies d’ambiance provisoires. Conception et développement du site : DEKA CÉRAM.</p>
+                    <p>
+                        Photographies d’ambiance : Unsplash (licence libre, usage commercial autorisé).
+                        Conception et développement du site : DEKA CERAM.
+                    </p>
                 </div>
             </section>
         </>

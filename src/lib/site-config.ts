@@ -79,7 +79,7 @@ export const STATS = [
 
 /** Réalisations mises en avant sur l'accueil (le détail vit dans lib/projets.ts). */
 export const REALISATIONS = [
-    { titre: 'Villa contemporaine', sousTitre: 'Grès effet Calacatta', seed: 'terra-a', href: '/realisations/villa-cote-dor/' },
-    { titre: 'Restaurant', sousTitre: 'Terrazzo & laiton', seed: 'terra-b', href: '/realisations/restaurant-le-comptoir/' },
-    { titre: 'Boutique-hôtel', sousTitre: 'Zellige & marbre', seed: 'terra-c', href: '/realisations/boutique-hotel-remparts/' },
+    { titre: 'Villa contemporaine', sousTitre: 'Marbre taupe & ambre', slug: 'villa-cote-dor' },
+    { titre: 'Restaurant', sousTitre: 'Terrazzo & mobilier acier', slug: 'restaurant-le-comptoir' },
+    { titre: 'Boutique-hôtel', sousTitre: 'Onyx bleuté & laiton', slug: 'boutique-hotel-remparts' },
 ];
