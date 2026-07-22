@@ -37,9 +37,11 @@ export function PanierView() {
         window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent('Mon projet DEKA CERAM — demande de chiffrage')}&body=${encodeURIComponent(lignes)}`;
     };
 
+    /* Pas de data-reveal : le panier se peuple après lecture du localStorage,
+       l'animation au scroll créait une course (contenu parfois invisible). */
     if (items.length === 0) {
         return (
-            <div className="form-panel" style={{ textAlign: 'center' }} data-reveal>
+            <div className="form-panel" style={{ textAlign: 'center' }}>
                 <p style={{ color: 'var(--taupe)', marginBottom: 20 }}>
                     Votre projet est vide pour l&rsquo;instant. Parcourez les collections et ajoutez
                     des matières ou des échantillons — ils vous attendront ici.
@@ -50,7 +52,7 @@ export function PanierView() {
     }
 
     return (
-        <div data-reveal>
+        <div>
             {produits.length > 0 && (
                 <div className="form-panel" style={{ marginBottom: 24 }}>
                     <h2 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 24, marginBottom: 6 }}>

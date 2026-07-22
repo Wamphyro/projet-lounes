@@ -52,9 +52,13 @@ export function LoginGate({
 
     if (connecte === null) return null; // évite le flash avant lecture du localStorage
 
+    /* Pas de data-reveal ici : ce contenu est inséré APRÈS le montage (lecture
+       du localStorage) — l'animer au scroll créait une course et le laissait
+       parfois invisible sans hard refresh. Une interface applicative s'affiche
+       immédiatement. */
     if (!connecte) {
         return (
-            <div className="form-panel login-card" data-reveal>
+            <div className="form-panel login-card">
                 <h2 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 26, marginBottom: 6 }}>{titre}</h2>
                 <p style={{ fontSize: 14, color: 'var(--taupe)', marginBottom: 20 }}>{sousTitre}</p>
                 <form onSubmit={login}>
@@ -91,7 +95,7 @@ export function LoginGate({
     }
 
     return (
-        <div data-reveal>
+        <div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
                 <button className="btn-x" onClick={logout} style={{ textDecoration: 'underline' }}>
                     Se déconnecter
