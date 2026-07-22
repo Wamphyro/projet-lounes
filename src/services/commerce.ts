@@ -152,20 +152,27 @@ export type Client = {
     email: string;
     tel: string;
     adresse: string;
+    contact?: string;   // interlocuteur (comptes pro)
+    siret?: string;     // comptes pro
+    origine?: string;   // comment le client nous a connus
     notes?: string;
     creeLe: string;
 };
 
+export const ORIGINES_CLIENT = [
+    'Passage showroom', 'Site internet', 'Bouche-à-oreille', 'Prescripteur (architecte…)', 'Google / réseaux', 'Autre',
+] as const;
+
 const CLIENTS_SEED: Client[] = [
-    { id: 'CLI-101', nom: 'Julie Morel', type: 'Particulier', email: 'client@demo.fr', tel: '06 12 34 56 78', adresse: '4 rue des Tanneurs, 21000 Dijon', notes: 'Projet salle de bain + crédence cuisine. Compte de démonstration de l’espace client.', creeLe: '02/07/2026' },
-    { id: 'CLI-102', nom: 'M. et Mme Perrin', type: 'Particulier', email: 'perrin.famille@mail.fr', tel: '06 22 33 44 55', adresse: '18 chemin des Vignes, 21200 Beaune', creeLe: '10/07/2026' },
-    { id: 'CLI-103', nom: 'SARL Bâti-Sud (pro)', type: 'Professionnel', email: 'contact@batisud.fr', tel: '03 80 11 22 33', adresse: 'ZA des Charrières, 21300 Chenôve', notes: 'Compte pro — chantiers réguliers, conditions négociées.', creeLe: '05/07/2026' },
-    { id: 'CLI-104', nom: 'Mme Lefèvre', type: 'Particulier', email: 'c.lefevre@mail.fr', tel: '06 45 67 89 01', adresse: '7 rue de la Liberté, 21000 Dijon', creeLe: '15/07/2026' },
-    { id: 'CLI-105', nom: 'Restaurant Le Comptoir', type: 'Professionnel', email: 'gerant@lecomptoir-dijon.fr', tel: '03 80 44 55 66', adresse: '12 place Émile Zola, 21000 Dijon', notes: 'Sol terrazzo posé en 2025 — client référence (témoignage site).', creeLe: '03/07/2026' },
-    { id: 'CLI-106', nom: 'M. Roussel', type: 'Particulier', email: 'roussel@mail.fr', tel: '06 78 90 12 34', adresse: '3 impasse des Acacias, 71000 Mâcon', creeLe: '08/07/2026' },
-    { id: 'CLI-107', nom: 'Atelier Verne (architecte)', type: 'Professionnel', email: 'agence@atelierverne.fr', tel: '03 80 77 88 99', adresse: '25 rue Chabot-Charny, 21000 Dijon', notes: 'Prescripteur — envoie régulièrement ses clients au showroom.', creeLe: '06/07/2026' },
-    { id: 'CLI-108', nom: 'Boulangerie Aux Blés d’Or', type: 'Professionnel', email: 'contact@auxblesdor.fr', tel: '03 80 33 22 11', adresse: '9 rue Monge, 21000 Dijon', creeLe: '07/07/2026' },
-    { id: 'CLI-109', nom: 'SCI Les Remparts', type: 'Professionnel', email: 'contact@remparts.fr', tel: '03 80 55 44 33', adresse: '2 rempart Saint-Jean, 21200 Beaune', notes: 'Projet 12 salles d’eau — demande de devis en cours.', creeLe: '19/07/2026' },
+    { id: 'CLI-101', nom: 'Julie Morel', type: 'Particulier', email: 'client@demo.fr', tel: '06 12 34 56 78', adresse: '4 rue des Tanneurs, 21000 Dijon', origine: 'Site internet', notes: 'Projet salle de bain + crédence cuisine. Compte de démonstration de l’espace client.', creeLe: '02/07/2026' },
+    { id: 'CLI-102', nom: 'M. et Mme Perrin', type: 'Particulier', email: 'perrin.famille@mail.fr', tel: '06 22 33 44 55', adresse: '18 chemin des Vignes, 21200 Beaune', origine: 'Bouche-à-oreille', creeLe: '10/07/2026' },
+    { id: 'CLI-103', nom: 'SARL Bâti-Sud (pro)', type: 'Professionnel', email: 'contact@batisud.fr', tel: '03 80 11 22 33', adresse: 'ZA des Charrières, 21300 Chenôve', contact: 'Karim Benali (conducteur de travaux)', siret: '832 456 789 00021', origine: 'Passage showroom', notes: 'Compte pro — chantiers réguliers, conditions négociées.', creeLe: '05/07/2026' },
+    { id: 'CLI-104', nom: 'Mme Lefèvre', type: 'Particulier', email: 'c.lefevre@mail.fr', tel: '06 45 67 89 01', adresse: '7 rue de la Liberté, 21000 Dijon', origine: 'Google / réseaux', creeLe: '15/07/2026' },
+    { id: 'CLI-105', nom: 'Restaurant Le Comptoir', type: 'Professionnel', email: 'gerant@lecomptoir-dijon.fr', tel: '03 80 44 55 66', adresse: '12 place Émile Zola, 21000 Dijon', contact: 'Thomas Girard (gérant)', siret: '791 234 567 00013', origine: 'Prescripteur (architecte…)', notes: 'Sol terrazzo posé en 2025 — client référence (témoignage site).', creeLe: '03/07/2026' },
+    { id: 'CLI-106', nom: 'M. Roussel', type: 'Particulier', email: 'roussel@mail.fr', tel: '06 78 90 12 34', adresse: '3 impasse des Acacias, 71000 Mâcon', origine: 'Bouche-à-oreille', creeLe: '08/07/2026' },
+    { id: 'CLI-107', nom: 'Atelier Verne (architecte)', type: 'Professionnel', email: 'agence@atelierverne.fr', tel: '03 80 77 88 99', adresse: '25 rue Chabot-Charny, 21000 Dijon', contact: 'Claire Verne (architecte DPLG)', siret: '844 987 321 00017', origine: 'Autre', notes: 'Prescripteur — envoie régulièrement ses clients au showroom.', creeLe: '06/07/2026' },
+    { id: 'CLI-108', nom: 'Boulangerie Aux Blés d’Or', type: 'Professionnel', email: 'contact@auxblesdor.fr', tel: '03 80 33 22 11', adresse: '9 rue Monge, 21000 Dijon', contact: 'Sofiane Amri', origine: 'Passage showroom', creeLe: '07/07/2026' },
+    { id: 'CLI-109', nom: 'SCI Les Remparts', type: 'Professionnel', email: 'contact@remparts.fr', tel: '03 80 55 44 33', adresse: '2 rempart Saint-Jean, 21200 Beaune', contact: 'Direction de l’hôtel', origine: 'Prescripteur (architecte…)', notes: 'Projet 12 salles d’eau — demande de devis en cours.', creeLe: '19/07/2026' },
 ];
 
 /** Facture — issue de la transformation d'un devis accepté (1 devis → 1 facture). */

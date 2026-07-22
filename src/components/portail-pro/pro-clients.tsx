@@ -3,62 +3,100 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-    useClients, useDevis, useCommandes, useFactures,
-    prochainIdClient, totalDevis,
+    useClients, useDevis, useCommandes, useFactures, useRdv,
+    prochainIdClient, totalDevis, ORIGINES_CLIENT,
     type Client, type TypeClient,
 } from '@/services/commerce';
+import { DEMO_CLIENT, ECHANTILLONS_CLIENT } from '@/services/demo-data';
 
 /**
- * Comptes clients (équipe) — recherche, création, fiche client avec tout
- * ce qui lui est rattaché (devis, factures, commandes, CA facturé).
+ * Comptes clients (équipe) — recherche, création, ÉDITION et fiche détaillée :
+ * identité complète (interlocuteur/SIRET pour les pros, origine du contact),
+ * indicateurs (CA, panier moyen, encours), fil d'activité chronologique
+ * (devis + factures + commandes fusionnés), éléments rattachés, et pour le
+ * compte démo : rendez-vous et échantillons en prêt.
  * Rattachement par nom en démo ; le backend passera par un clientId.
  */
+
+const ts = (d: string) => {
+    const [j, m, a] = d.split('/').map(Number);
+    return (a ?? 0) * 10000 + (m ?? 0) * 100 + (j ?? 0);
+};
+
+const toneDevis = (s: string) =>
+    s === 'Accepté' ? 'ok' : s === 'Envoyé' ? 'warn' : s === 'Refusé' ? 'bad' : s === 'Facturé' ? 'info' : 'off';
+const toneCommande = (s: string) => (s === 'Livrée' ? 'ok' : s === 'En livraison' ? 'info' : 'warn');
+
+const H3: React.CSSProperties = {
+    fontSize: 12, fontWeight: 700, margin: '18px 0 8px',
+    textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--taupe)',
+};
+
 export function ProClients() {
     const [clients, setClients] = useClients();
     const [devis] = useDevis();
     const [commandes] = useCommandes();
     const [factures] = useFactures();
+    const [rdv] = useRdv();
 
     const [recherche, setRecherche] = useState('');
     const [selId, setSelId] = useState<string | null>(null);
-    const [creation, setCreation] = useState(false);
+    const [mode, setMode] = useState<'fiche' | 'creation' | 'edition'>('fiche');
 
     const visibles = recherche
         ? clients.filter((c) =>
-            `${c.nom} ${c.email} ${c.tel} ${c.adresse}`.toLowerCase().includes(recherche.toLowerCase()))
+            `${c.nom} ${c.email} ${c.tel} ${c.adresse} ${c.contact ?? ''}`.toLowerCase().includes(recherche.toLowerCase()))
         : clients;
-    const sel = clients.find((c) => c.id === selId) ?? (creation ? null : visibles[0]);
+    const sel = clients.find((c) => c.id === selId) ?? (mode === 'creation' ? null : visibles[0]);
 
-    /* Rattachements du client sélectionné (par nom en démo) */
+    /* — Rattachements (par nom en démo) — */
     const sesDevis = sel ? devis.filter((d) => d.client === sel.nom) : [];
     const sesCommandes = sel ? commandes.filter((c) => c.client === sel.nom) : [];
     const sesFactures = sel ? factures.filter((f) => f.client === sel.nom) : [];
     const caFacture = sesFactures.reduce((t, f) => t + f.total, 0);
+    const encours = sesFactures.filter((f) => f.statut === 'À régler').reduce((t, f) => t + f.total, 0);
+    const panierMoyen = sesFactures.length ? Math.round(caFacture / sesFactures.length) : 0;
+    const estCompteDemo = sel?.email === DEMO_CLIENT.user;
 
-    /* — Formulaire de création — */
-    const [fNom, setFNom] = useState('');
-    const [fType, setFType] = useState<TypeClient>('Particulier');
-    const [fEmail, setFEmail] = useState('');
-    const [fTel, setFTel] = useState('');
-    const [fAdresse, setFAdresse] = useState('');
-    const [fNotes, setFNotes] = useState('');
+    /* — Fil d'activité fusionné, du plus récent au plus ancien — */
+    const activite = sel
+        ? [
+            ...sesDevis.map((d) => ({ date: d.date, texte: `Devis ${d.id} — ${totalDevis(d).toLocaleString('fr-FR')} € TTC`, statut: d.statut, tone: toneDevis(d.statut) })),
+            ...sesFactures.map((f) => ({ date: f.date, texte: `Facture ${f.id} — ${f.total.toLocaleString('fr-FR')} € TTC`, statut: f.statut, tone: f.statut === 'Réglée' ? 'ok' : 'warn' })),
+            ...sesCommandes.map((c) => ({ date: c.date, texte: `Commande ${c.id} — ${c.detail}`, statut: c.statut, tone: toneCommande(c.statut) })),
+        ].sort((a, b) => ts(b.date) - ts(a.date))
+        : [];
 
-    const creer = () => {
-        if (!fNom.trim()) return;
-        const nouveau: Client = {
-            id: prochainIdClient(clients),
-            nom: fNom.trim(),
-            type: fType,
-            email: fEmail.trim(),
-            tel: fTel.trim(),
-            adresse: fAdresse.trim(),
-            notes: fNotes.trim() || undefined,
-            creeLe: new Date().toLocaleDateString('fr-FR'),
+    /* — Formulaire (création ET édition) — */
+    const vide = { nom: '', type: 'Particulier' as TypeClient, email: '', tel: '', adresse: '', contact: '', siret: '', origine: '', notes: '' };
+    const [form, setForm] = useState(vide);
+    const maj = (k: keyof typeof vide) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+        setForm({ ...form, [k]: e.target.value });
+
+    const ouvrirCreation = () => { setForm(vide); setMode('creation'); setSelId(null); };
+    const ouvrirEdition = (c: Client) => {
+        setForm({ nom: c.nom, type: c.type, email: c.email, tel: c.tel, adresse: c.adresse, contact: c.contact ?? '', siret: c.siret ?? '', origine: c.origine ?? '', notes: c.notes ?? '' });
+        setSelId(c.id);
+        setMode('edition');
+    };
+
+    const enregistrer = () => {
+        if (!form.nom.trim()) return;
+        const champs = {
+            nom: form.nom.trim(), type: form.type, email: form.email.trim(), tel: form.tel.trim(),
+            adresse: form.adresse.trim(), contact: form.contact.trim() || undefined,
+            siret: form.siret.trim() || undefined, origine: form.origine || undefined,
+            notes: form.notes.trim() || undefined,
         };
-        setClients([nouveau, ...clients]);
-        setCreation(false);
-        setSelId(nouveau.id);
-        setFNom(''); setFEmail(''); setFTel(''); setFAdresse(''); setFNotes(''); setFType('Particulier');
+        if (mode === 'edition' && sel) {
+            setClients(clients.map((c) => (c.id === sel.id ? { ...c, ...champs } : c)));
+            setMode('fiche');
+        } else {
+            const nouveau: Client = { id: prochainIdClient(clients), creeLe: new Date().toLocaleDateString('fr-FR'), ...champs };
+            setClients([nouveau, ...clients]);
+            setSelId(nouveau.id);
+            setMode('fiche');
+        }
     };
 
     return (
@@ -66,19 +104,14 @@ export function ProClients() {
             <div className="portal-head">
                 <div>
                     <h1 className="portal-title">Clients</h1>
-                    <p className="portal-sub">{clients.length} comptes — cherchez, ouvrez une fiche, créez un compte.</p>
+                    <p className="portal-sub">{clients.length} comptes — cherchez, ouvrez une fiche, créez ou modifiez un compte.</p>
                 </div>
-                <button className="btn" onClick={() => { setCreation(true); setSelId(null); }}>+ Nouveau client</button>
+                <button className="btn" onClick={ouvrirCreation}>+ Nouveau client</button>
             </div>
 
             <div className="field" style={{ maxWidth: 420, marginBottom: 22 }}>
                 <label htmlFor="cli-recherche">Rechercher</label>
-                <input
-                    id="cli-recherche"
-                    value={recherche}
-                    onChange={(e) => setRecherche(e.target.value)}
-                    placeholder="Nom, email, téléphone, ville…"
-                />
+                <input id="cli-recherche" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Nom, interlocuteur, email, téléphone, ville…" />
             </div>
 
             <div className="md">
@@ -86,8 +119,8 @@ export function ProClients() {
                     {visibles.map((c) => (
                         <button
                             key={c.id}
-                            className={`md-item${sel?.id === c.id && !creation ? ' current' : ''}`}
-                            onClick={() => { setSelId(c.id); setCreation(false); }}
+                            className={`md-item${sel?.id === c.id && mode !== 'creation' ? ' current' : ''}`}
+                            onClick={() => { setSelId(c.id); setMode('fiche'); }}
                         >
                             <span className="l1">
                                 <span>{c.nom}</span>
@@ -97,119 +130,174 @@ export function ProClients() {
                         </button>
                     ))}
                     {visibles.length === 0 && (
-                        <p style={{ color: 'var(--taupe)', fontSize: 14 }}>
-                            Aucun client ne correspond à « {recherche} ».
-                        </p>
+                        <p style={{ color: 'var(--taupe)', fontSize: 14 }}>Aucun client ne correspond à « {recherche} ».</p>
                     )}
                 </div>
 
-                {/* ——— Création ——— */}
-                {creation ? (
+                {/* ——— Formulaire création / édition ——— */}
+                {(mode === 'creation' || mode === 'edition') ? (
                     <div className="md-detail">
-                        <h2>Nouveau compte client</h2>
+                        <h2>{mode === 'edition' ? `Modifier — ${sel?.nom}` : 'Nouveau compte client'}</h2>
                         <div className="form-grid" style={{ marginTop: 16 }}>
                             <div className="field">
-                                <label htmlFor="nc-nom">Nom / raison sociale *</label>
-                                <input id="nc-nom" value={fNom} onChange={(e) => setFNom(e.target.value)} placeholder="Ex. M. Dupont, SARL…" />
+                                <label htmlFor="fc-nom">Nom / raison sociale *</label>
+                                <input id="fc-nom" value={form.nom} onChange={maj('nom')} placeholder="Ex. M. Dupont, SARL…" />
                             </div>
                             <div className="field">
-                                <label htmlFor="nc-type">Type</label>
-                                <select id="nc-type" value={fType} onChange={(e) => setFType(e.target.value as TypeClient)}>
+                                <label htmlFor="fc-type">Type</label>
+                                <select id="fc-type" value={form.type} onChange={maj('type')}>
                                     <option>Particulier</option>
                                     <option>Professionnel</option>
                                 </select>
                             </div>
                             <div className="field">
-                                <label htmlFor="nc-email">Email</label>
-                                <input id="nc-email" type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="client@mail.fr" />
+                                <label htmlFor="fc-email">Email</label>
+                                <input id="fc-email" type="email" value={form.email} onChange={maj('email')} placeholder="client@mail.fr" />
                             </div>
                             <div className="field">
-                                <label htmlFor="nc-tel">Téléphone</label>
-                                <input id="nc-tel" type="tel" value={fTel} onChange={(e) => setFTel(e.target.value)} placeholder="06 …" />
+                                <label htmlFor="fc-tel">Téléphone</label>
+                                <input id="fc-tel" type="tel" value={form.tel} onChange={maj('tel')} placeholder="06 …" />
                             </div>
                             <div className="field full">
-                                <label htmlFor="nc-adresse">Adresse</label>
-                                <input id="nc-adresse" value={fAdresse} onChange={(e) => setFAdresse(e.target.value)} placeholder="N°, rue, code postal, ville" />
+                                <label htmlFor="fc-adresse">Adresse</label>
+                                <input id="fc-adresse" value={form.adresse} onChange={maj('adresse')} placeholder="N°, rue, code postal, ville" />
+                            </div>
+                            {form.type === 'Professionnel' && (
+                                <>
+                                    <div className="field">
+                                        <label htmlFor="fc-contact">Interlocuteur</label>
+                                        <input id="fc-contact" value={form.contact} onChange={maj('contact')} placeholder="Prénom Nom (fonction)" />
+                                    </div>
+                                    <div className="field">
+                                        <label htmlFor="fc-siret">SIRET</label>
+                                        <input id="fc-siret" value={form.siret} onChange={maj('siret')} placeholder="14 chiffres" />
+                                    </div>
+                                </>
+                            )}
+                            <div className="field">
+                                <label htmlFor="fc-origine">Origine du contact</label>
+                                <select id="fc-origine" value={form.origine} onChange={maj('origine')}>
+                                    <option value="">—</option>
+                                    {ORIGINES_CLIENT.map((o) => <option key={o}>{o}</option>)}
+                                </select>
                             </div>
                             <div className="field full">
-                                <label htmlFor="nc-notes">Notes internes</label>
-                                <textarea id="nc-notes" value={fNotes} onChange={(e) => setFNotes(e.target.value)} placeholder="Projet, préférences, prescripteur…" style={{ minHeight: 70 }} />
+                                <label htmlFor="fc-notes">Notes internes</label>
+                                <textarea id="fc-notes" value={form.notes} onChange={maj('notes')} placeholder="Projet, préférences, prescripteur…" style={{ minHeight: 70 }} />
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                            <button className="btn" onClick={creer} disabled={!fNom.trim()}>Créer le compte</button>
-                            <button className="btn-x" onClick={() => setCreation(false)}>Annuler</button>
+                            <button className="btn" onClick={enregistrer} disabled={!form.nom.trim()}>
+                                {mode === 'edition' ? 'Enregistrer les modifications' : 'Créer le compte'}
+                            </button>
+                            <button className="btn-x" onClick={() => setMode('fiche')}>Annuler</button>
                         </div>
                     </div>
                 ) : sel ? (
-                    /* ——— Fiche client ——— */
+                    /* ——— Fiche client détaillée ——— */
                     <div className="md-detail">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
                             <div>
                                 <h2>{sel.nom}</h2>
                                 <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 4 }}>
                                     {sel.id} · client depuis le {sel.creeLe}
+                                    {sel.origine ? <> · origine : {sel.origine}</> : null}
+                                    {estCompteDemo ? <> · <span className="pill info">Compte démo espace client</span></> : null}
                                 </p>
                             </div>
-                            <span className={`pill ${sel.type === 'Professionnel' ? 'info' : 'off'}`} style={{ marginTop: 3 }}>{sel.type}</span>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <span className={`pill ${sel.type === 'Professionnel' ? 'info' : 'off'}`}>{sel.type}</span>
+                                <button className="chip" onClick={() => ouvrirEdition(sel)}>Modifier</button>
+                            </div>
                         </div>
 
-                        <table className="spec-table" style={{ margin: '14px 0 4px' }}>
+                        <h3 style={H3}>Coordonnées</h3>
+                        <table className="spec-table" style={{ margin: '0 0 4px' }}>
                             <tbody>
                                 <tr><td>Email</td><td>{sel.email ? <a href={`mailto:${sel.email}`} style={{ textDecoration: 'underline' }}>{sel.email}</a> : '—'}</td></tr>
                                 <tr><td>Téléphone</td><td>{sel.tel ? <a href={`tel:${sel.tel.replace(/ /g, '')}`} style={{ textDecoration: 'underline' }}>{sel.tel}</a> : '—'}</td></tr>
                                 <tr><td>Adresse</td><td>{sel.adresse || '—'}</td></tr>
+                                {sel.contact && <tr><td>Interlocuteur</td><td>{sel.contact}</td></tr>}
+                                {sel.siret && <tr><td>SIRET</td><td>{sel.siret}</td></tr>}
                             </tbody>
                         </table>
 
                         {sel.notes && (
-                            <p style={{ fontSize: 14, color: 'var(--taupe)', background: 'var(--sable)', borderRadius: 12, padding: '10px 14px', marginBottom: 6 }}>
-                                {sel.notes}
-                            </p>
+                            <>
+                                <h3 style={H3}>Notes internes</h3>
+                                <p style={{ fontSize: 14, color: 'var(--encre)', background: 'var(--sable)', borderRadius: 12, padding: '10px 14px' }}>
+                                    {sel.notes}
+                                </p>
+                            </>
                         )}
 
-                        <div className="tiles" style={{ margin: '16px 0 8px' }}>
-                            <div className="tile"><div className="val">{sesDevis.length}</div><div className="lbl">Devis</div></div>
-                            <div className="tile"><div className="val">{sesCommandes.length}</div><div className="lbl">Commandes</div></div>
-                            <div className="tile"><div className="val">{sesFactures.length}</div><div className="lbl">Factures</div></div>
+                        <h3 style={H3}>Indicateurs</h3>
+                        <div className="tiles" style={{ marginBottom: 4 }}>
                             <div className="tile"><div className="val">{caFacture.toLocaleString('fr-FR')} €</div><div className="lbl">CA facturé</div></div>
+                            <div className="tile"><div className="val">{encours.toLocaleString('fr-FR')} €</div><div className="lbl">Encours à régler</div></div>
+                            <div className="tile"><div className="val">{panierMoyen ? `${panierMoyen.toLocaleString('fr-FR')} €` : '—'}</div><div className="lbl">Panier moyen</div></div>
+                            <div className="tile"><div className="val">{sesDevis.length + sesCommandes.length + sesFactures.length}</div><div className="lbl">Documents rattachés</div></div>
                         </div>
 
-                        {sesDevis.length > 0 && (
+                        {activite.length > 0 && (
                             <>
-                                <h3 style={{ fontSize: 12, fontWeight: 700, margin: '14px 0 8px', textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--taupe)' }}>Devis rattachés</h3>
+                                <h3 style={H3}>Fil d&rsquo;activité</h3>
+                                <ul className="timeline">
+                                    {activite.map((a, i) => (
+                                        <li key={i}>
+                                            <b>{a.date}</b> — {a.texte}{' '}
+                                            <span className={`pill ${a.tone}`} style={{ marginLeft: 4 }}>{a.statut}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {estCompteDemo && (
+                            <>
+                                <h3 style={H3}>Rendez-vous & échantillons</h3>
+                                <div className="md-list">
+                                    {rdv.map((r, i) => (
+                                        <div key={i} className="md-item" style={{ cursor: 'default' }}>
+                                            <span className="l1">
+                                                <span>{r.date} à {r.heure}</span>
+                                                <span className={`pill ${r.statut === 'Confirmé' ? 'ok' : 'warn'}`}>{r.statut}</span>
+                                            </span>
+                                            <span className="l2">{r.objet}</span>
+                                        </div>
+                                    ))}
+                                    {ECHANTILLONS_CLIENT.map((e) => (
+                                        <div key={e.nom} className="md-item" style={{ cursor: 'default' }}>
+                                            <span className="l1">
+                                                <span>Échantillon — {e.nom}</span>
+                                                <span className="pill warn">En prêt</span>
+                                            </span>
+                                            <span className="l2">Prêté le {e.depuis} — retour {e.retour}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {(sesDevis.length > 0 || sesFactures.length > 0 || sesCommandes.length > 0) && (
+                            <>
+                                <h3 style={H3}>Documents rattachés</h3>
                                 <div className="md-list">
                                     {sesDevis.map((d) => (
                                         <Link key={d.id} href="/espace-pro/devis/" className="md-item" style={{ display: 'block' }}>
-                                            <span className="l1"><span>{d.id}</span><span className={`pill ${d.statut === 'Accepté' ? 'ok' : d.statut === 'Envoyé' ? 'warn' : d.statut === 'Refusé' ? 'bad' : d.statut === 'Facturé' ? 'info' : 'off'}`}>{d.statut}</span></span>
-                                            <span className="l2">{d.date} · {totalDevis(d).toLocaleString('fr-FR')} € TTC</span>
+                                            <span className="l1"><span>{d.id} · Devis</span><span className={`pill ${toneDevis(d.statut)}`}>{d.statut}</span></span>
+                                            <span className="l2">{d.date} · {totalDevis(d).toLocaleString('fr-FR')} € TTC · {d.lignes.length} ligne{d.lignes.length > 1 ? 's' : ''}</span>
                                         </Link>
                                     ))}
-                                </div>
-                            </>
-                        )}
-
-                        {sesFactures.length > 0 && (
-                            <>
-                                <h3 style={{ fontSize: 12, fontWeight: 700, margin: '14px 0 8px', textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--taupe)' }}>Factures rattachées</h3>
-                                <div className="md-list">
                                     {sesFactures.map((f) => (
                                         <Link key={f.id} href="/espace-pro/factures/" className="md-item" style={{ display: 'block' }}>
-                                            <span className="l1"><span>{f.id}</span><span className={`pill ${f.statut === 'Réglée' ? 'ok' : 'warn'}`}>{f.statut}</span></span>
-                                            <span className="l2">{f.date} · {f.total.toLocaleString('fr-FR')} € TTC</span>
+                                            <span className="l1"><span>{f.id} · Facture</span><span className={`pill ${f.statut === 'Réglée' ? 'ok' : 'warn'}`}>{f.statut}</span></span>
+                                            <span className="l2">{f.date} · {f.total.toLocaleString('fr-FR')} € TTC · depuis {f.devisId}</span>
                                         </Link>
                                     ))}
-                                </div>
-                            </>
-                        )}
-
-                        {sesCommandes.length > 0 && (
-                            <>
-                                <h3 style={{ fontSize: 12, fontWeight: 700, margin: '14px 0 8px', textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--taupe)' }}>Commandes rattachées</h3>
-                                <div className="md-list">
                                     {sesCommandes.map((c) => (
                                         <Link key={c.id} href="/espace-pro/commandes/" className="md-item" style={{ display: 'block' }}>
-                                            <span className="l1"><span>{c.id}</span><span className={`pill ${c.statut === 'Livrée' ? 'ok' : c.statut === 'En livraison' ? 'info' : 'warn'}`}>{c.statut}</span></span>
+                                            <span className="l1"><span>{c.id} · Commande</span><span className={`pill ${toneCommande(c.statut)}`}>{c.statut}</span></span>
                                             <span className="l2">{c.date} · {c.detail}</span>
                                         </Link>
                                     ))}
@@ -217,10 +305,12 @@ export function ProClients() {
                             </>
                         )}
 
-                        <div style={{ marginTop: 20 }}>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
                             <Link href={`/espace-pro/devis/?nouveau=1&client=${encodeURIComponent(sel.nom)}`} className="btn">
-                                + Nouveau devis pour {sel.nom.split(' ')[0] === 'M.' || sel.nom.split(' ')[0] === 'Mme' ? 'ce client' : sel.nom.split(' ')[0]}
+                                + Nouveau devis
                             </Link>
+                            {sel.email && <a href={`mailto:${sel.email}`} className="btn dark">Écrire un email</a>}
+                            {sel.tel && <a href={`tel:${sel.tel.replace(/ /g, '')}`} className="btn dark">Appeler</a>}
                         </div>
                     </div>
                 ) : null}
