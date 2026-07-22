@@ -26,7 +26,7 @@ export const LEGAL = {
     president: 'Lounès Dekkiche',
 };
 
-export const SITE_URL = 'https://deka-ceram.web.app';
+export const SITE_URL = 'https://wamphyro.github.io/projet-lounes';
 
 /** Liens de la navigation (pages du site). */
 export const NAV_LINKS = [

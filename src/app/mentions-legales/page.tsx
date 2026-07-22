@@ -33,7 +33,7 @@ export default function MentionsLegalesPage() {
                     </p>
                     <h2>Hébergement</h2>
                     <p>
-                        Firebase Hosting — Google Ireland Ltd, Gordon House, Barrow Street, Dublin 4, Irlande.
+                        GitHub Pages — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.
                     </p>
                     <h2>Propriété intellectuelle</h2>
                     <p>
