@@ -183,8 +183,16 @@ const RDV_SEED: Rdv[] = [
     { date: 'Samedi 26 juillet 2026', heure: '10:00', objet: 'Choix des finitions — salle de bain', statut: 'Confirmé' },
 ];
 
-/** Réception de stock (bon de livraison fournisseur) — par RÉFÉRENCE. */
-export type LigneReception = { ref: string; nom: string; quantite: number };
+/** Réception de stock (bon de livraison fournisseur) — par RÉFÉRENCE.
+    `paquets` est null pour les formats vendus au m² (opus, chevron…). */
+export type LigneReception = {
+    ref: string;
+    nom: string;
+    paquets: number | null;
+    quantite: number;   // m² reçus
+    prixM2: number;     // prix d'achat ramené au m² (HT)
+    montant: number;    // total ligne (HT)
+};
 export type Reception = {
     id: string;
     bl: string;
@@ -202,8 +210,8 @@ const RECEPTIONS_SEED: Reception[] = [
         date: '18/07/2026',
         mode: 'Saisie manuelle',
         lignes: [
-            { ref: 'CAL-60X120-BLA', nom: 'Calacatta Oro · Blanc · 60×120', quantite: 120 },
-            { ref: 'TER-60X60-CRE', nom: 'Terrazzo Venezia · Crème · 60×60', quantite: 80 },
+            { ref: 'CAL-60X120-BLA', nom: 'Calacatta Oro · Blanc · 60×120', paquets: 83, quantite: 119.5, prixM2: 31.5, montant: 3764 },
+            { ref: 'TER-60X60-CRE', nom: 'Terrazzo Venezia · Crème · 60×60', paquets: 56, quantite: 80.6, prixM2: 42, montant: 3385 },
         ],
     },
 ];
@@ -272,7 +280,7 @@ export const useDevis = () => useCollection<Devis[]>('dc-devis', DEVIS_SEED);
 export const useCommandes = () => useCollection<Commande[]>('dc-commandes', COMMANDES_SEED);
 export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDES_SEED);
 export const useStock = () => useCollection<Record<string, number>>('dc-stock-v2', STOCK_INITIAL);
-export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v2', RECEPTIONS_SEED);
+export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v3', RECEPTIONS_SEED);
 export const useRdv = () => useCollection<Rdv[]>('dc-rdv', RDV_SEED);
 export const useFactures = () => useCollection<Facture[]>('dc-factures', FACTURES_SEED);
 

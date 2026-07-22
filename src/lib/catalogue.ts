@@ -411,6 +411,17 @@ export const variantesDeProduit = (p: Produit): Variante[] =>
 export const TOUTES_VARIANTES: Variante[] = PRODUITS.flatMap(variantesDeProduit);
 export const getVariante = (ref: string) => TOUTES_VARIANTES.find((v) => v.ref === ref);
 
+/** Conditionnement d'un format : carreaux par paquet et m² par paquet
+    (boîte standard ~1,44 m² ; grands formats = 1 carreau par colis).
+    Renvoie null pour les formats sans dimensions (opus, chevron…) vendus au m². */
+export const conditionnement = (format: string): { carreaux: number; m2: number } | null => {
+    const m = format.replace(',', '.').match(/(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    const aire = (parseFloat(m[1]) / 100) * (parseFloat(m[2]) / 100); // m² par carreau
+    const carreaux = Math.max(1, Math.round(1.44 / aire));
+    return { carreaux, m2: Math.round(carreaux * aire * 100) / 100 };
+};
+
 /* — Accès — */
 export const getFamille = (slug: string) => FAMILLES.find((f) => f.slug === slug);
 export const getProduit = (slug: string) => PRODUITS.find((p) => p.slug === slug);

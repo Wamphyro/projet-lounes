@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PRODUITS, getFamille, variantesDeProduit, getVariante } from '@/lib/catalogue';
+import { PRODUITS, getFamille, variantesDeProduit, getVariante, conditionnement } from '@/lib/catalogue';
 import {
     useStock, useReceptions, prochainIdReception,
     stockDuModele, refsEnAlerte, SEUIL_STOCK,
@@ -28,33 +28,46 @@ export function ProStock() {
     const modelesEnAlerte = PRODUITS.filter((p) => refsEnAlerte(stock, p).length > 0).length;
     const totalRefs = PRODUITS.reduce((t, p) => t + variantesDeProduit(p).length, 0);
 
-    /* — Formulaire BL manuel (par référence) — */
+    /* — Formulaire BL manuel (par référence, en paquets + prix d'achat) — */
     const [fBl, setFBl] = useState('');
     const [fFour, setFFour] = useState('');
     const [fLignes, setFLignes] = useState<LigneReception[]>([]);
     const [fModele, setFModele] = useState(PRODUITS[0].slug);
     const fModeleVariantes = variantesDeProduit(PRODUITS.find((p) => p.slug === fModele)!);
     const [fRef, setFRef] = useState(fModeleVariantes[0].ref);
-    const [fQte, setFQte] = useState('');
+    const [fPaquets, setFPaquets] = useState('');
+    const [fQteM2, setFQteM2] = useState('');
+    const [fPrix, setFPrix] = useState('');
+    const [fUnite, setFUnite] = useState<'m2' | 'paquet'>('m2');
+
+    const vSel = getVariante(fRef)!;
+    const cond = conditionnement(vSel.format);
 
     const changerModele = (slug: string) => {
         setFModele(slug);
         setFRef(variantesDeProduit(PRODUITS.find((p) => p.slug === slug)!)[0].ref);
+        setFPaquets(''); setFQteM2(''); setFUnite('m2');
     };
 
+    /* Quantité et prix de la ligne en cours (aperçu avant ajout). */
+    const num = (s: string) => parseFloat(s.replace(',', '.')) || 0;
+    const ligneM2 = cond ? Math.round(num(fPaquets) * cond.m2 * 100) / 100 : num(fQteM2);
+    const lignePrixM2 = fUnite === 'paquet' && cond ? (num(fPrix) > 0 ? Math.round((num(fPrix) / cond.m2) * 100) / 100 : 0) : num(fPrix);
+    const ligneMontant = Math.round(ligneM2 * lignePrixM2);
+
     const ajouterLigne = () => {
-        const q = parseFloat(fQte.replace(',', '.'));
-        if (!q || q <= 0) return;
-        const v = getVariante(fRef)!;
-        const p = PRODUITS.find((x) => x.slug === v.produit)!;
-        const nom = `${p.nom} · ${v.couleur} · ${v.format}`;
-        const existante = fLignes.find((l) => l.ref === fRef);
-        setFLignes(
-            existante
-                ? fLignes.map((l) => (l.ref === fRef ? { ...l, quantite: l.quantite + q } : l))
-                : [...fLignes, { ref: fRef, nom, quantite: q }]
-        );
-        setFQte('');
+        if (ligneM2 <= 0 || lignePrixM2 <= 0) return;
+        const p = PRODUITS.find((x) => x.slug === vSel.produit)!;
+        const ligne: LigneReception = {
+            ref: fRef,
+            nom: `${p.nom} · ${vSel.couleur} · ${vSel.format}`,
+            paquets: cond ? num(fPaquets) : null,
+            quantite: ligneM2,
+            prixM2: lignePrixM2,
+            montant: ligneMontant,
+        };
+        setFLignes([...fLignes.filter((l) => l.ref !== fRef), ligne]);
+        setFPaquets(''); setFQteM2(''); setFPrix('');
     };
 
     const validerBl = () => {
@@ -140,49 +153,90 @@ export function ProStock() {
                         Lignes du BL
                     </h3>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                        <div className="field" style={{ flex: 2, minWidth: 200 }}>
+                        <div className="field" style={{ flex: 2, minWidth: 190 }}>
                             <label htmlFor="bl-modele">Modèle</label>
                             <select id="bl-modele" value={fModele} onChange={(e) => changerModele(e.target.value)}>
                                 {PRODUITS.map((p) => <option key={p.slug} value={p.slug}>{p.nom}</option>)}
                             </select>
                         </div>
-                        <div className="field" style={{ flex: 2, minWidth: 220 }}>
+                        <div className="field" style={{ flex: 2, minWidth: 210 }}>
                             <label htmlFor="bl-ref">Référence (couleur · format)</label>
-                            <select id="bl-ref" value={fRef} onChange={(e) => setFRef(e.target.value)}>
+                            <select id="bl-ref" value={fRef} onChange={(e) => { setFRef(e.target.value); setFPaquets(''); setFQteM2(''); }}>
                                 {fModeleVariantes.map((v) => (
                                     <option key={v.ref} value={v.ref}>{v.ref} — {v.couleur} · {v.format}</option>
                                 ))}
                             </select>
                         </div>
-                        <div className="field" style={{ width: 110 }}>
-                            <label htmlFor="bl-qte">Quantité m²</label>
-                            <input id="bl-qte" type="number" min="0" step="0.5" value={fQte} onChange={(e) => setFQte(e.target.value)} />
+                        {cond ? (
+                            <div className="field" style={{ width: 120 }}>
+                                <label htmlFor="bl-paquets">Nb de paquets</label>
+                                <input id="bl-paquets" type="number" min="0" step="1" value={fPaquets} onChange={(e) => setFPaquets(e.target.value)} />
+                            </div>
+                        ) : (
+                            <div className="field" style={{ width: 120 }}>
+                                <label htmlFor="bl-m2">Quantité m²</label>
+                                <input id="bl-m2" type="number" min="0" step="0.5" value={fQteM2} onChange={(e) => setFQteM2(e.target.value)} />
+                            </div>
+                        )}
+                        <div className="field" style={{ width: 120 }}>
+                            <label htmlFor="bl-prix">Prix d&rsquo;achat HT</label>
+                            <input id="bl-prix" type="number" min="0" step="0.01" value={fPrix} onChange={(e) => setFPrix(e.target.value)} />
                         </div>
-                        <button className="btn dark" onClick={ajouterLigne} style={{ marginBottom: 2 }}>Ajouter</button>
+                        <div className="field" style={{ width: 130 }}>
+                            <label htmlFor="bl-unite">Unité du prix</label>
+                            <select id="bl-unite" value={fUnite} onChange={(e) => setFUnite(e.target.value as 'm2' | 'paquet')}>
+                                <option value="m2">€ / m²</option>
+                                {cond && <option value="paquet">€ / paquet</option>}
+                            </select>
+                        </div>
+                        <button className="btn dark" onClick={ajouterLigne} disabled={ligneM2 <= 0 || lignePrixM2 <= 0} style={{ marginBottom: 2 }}>
+                            Ajouter
+                        </button>
                     </div>
+
+                    {/* Aperçu conditionnement + conversion de la ligne en cours */}
+                    <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 10 }}>
+                        {cond
+                            ? <>Conditionnement {vSel.ref} : <b>{cond.carreaux} carreau{cond.carreaux > 1 ? 'x' : ''} / paquet = {cond.m2} m²</b>.</>
+                            : <>Format « {vSel.format} » vendu au m² (pas de paquet standard).</>}
+                        {ligneM2 > 0 && lignePrixM2 > 0 && (
+                            <> &nbsp;→&nbsp; <b>{ligneM2} m²</b> à <b>{lignePrixM2} €/m²</b> = <b>{ligneMontant.toLocaleString('fr-FR')} € HT</b></>
+                        )}
+                    </p>
 
                     {fLignes.length > 0 && (
                         <table className="lignes-table">
                             <thead>
-                                <tr><th>Réf.</th><th>Désignation</th><th>Reçu</th><th>Stock après</th><th></th></tr>
+                                <tr><th>Réf.</th><th>Désignation</th><th>Paquets</th><th>m²</th><th>€/m² HT</th><th style={{ textAlign: 'right' }}>Montant HT</th><th></th></tr>
                             </thead>
                             <tbody>
                                 {fLignes.map((l) => (
                                     <tr key={l.ref}>
                                         <td style={{ fontWeight: 600 }}>{l.ref}</td>
                                         <td>{l.nom}</td>
-                                        <td>+{l.quantite} m²</td>
-                                        <td>{((stock[l.ref] ?? 0) + l.quantite)} m²</td>
+                                        <td>{l.paquets ?? '—'}</td>
+                                        <td>{l.quantite}</td>
+                                        <td>{l.prixM2}</td>
+                                        <td style={{ textAlign: 'right' }}>{l.montant.toLocaleString('fr-FR')} €</td>
                                         <td><button className="btn-x" onClick={() => setFLignes(fLignes.filter((x) => x.ref !== l.ref))}>Retirer</button></td>
                                     </tr>
                                 ))}
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan={3}>Total réception</td>
+                                    <td>{Math.round(fLignes.reduce((t, l) => t + l.quantite, 0) * 100) / 100}</td>
+                                    <td></td>
+                                    <td style={{ textAlign: 'right' }}>{fLignes.reduce((t, l) => t + l.montant, 0).toLocaleString('fr-FR')} €</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     )}
 
                     <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
                         <button className="btn" onClick={validerBl} disabled={!fBl || fLignes.length === 0}>
-                            Valider la réception ({fLignes.reduce((t, l) => t + l.quantite, 0)} m²)
+                            Valider la réception ({Math.round(fLignes.reduce((t, l) => t + l.quantite, 0) * 100) / 100} m² · {fLignes.reduce((t, l) => t + l.montant, 0).toLocaleString('fr-FR')} € HT)
                         </button>
                         <button className="btn-x" onClick={() => setPanneau('ferme')}>Annuler</button>
                     </div>
@@ -229,16 +283,18 @@ export function ProStock() {
                     <div className="table-scroll" style={{ marginTop: 16 }}>
                         <table className="data-table">
                             <thead>
-                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Stock (m²)</th><th>État</th></tr>
+                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Conditionnement</th><th>Stock (m²)</th><th>État</th></tr>
                             </thead>
                             <tbody>
                                 {selVariantes.map((v) => {
                                     const s = stock[v.ref] ?? 0;
+                                    const c = conditionnement(v.format);
                                     return (
                                         <tr key={v.ref}>
                                             <td style={{ fontWeight: 600 }}>{v.ref}</td>
                                             <td>{v.couleur}</td>
                                             <td>{v.format}</td>
+                                            <td>{c ? `${c.carreaux} crx · ${c.m2} m²/paquet` : 'Au m²'}</td>
                                             <td>{s}</td>
                                             <td>
                                                 {s === 0 ? <span className="pill bad">Rupture</span>
@@ -271,6 +327,7 @@ export function ProStock() {
                         </span>
                         <span className="l2">
                             {r.date} · {r.fournisseur} · {r.lignes.map((l) => `${l.ref} +${l.quantite} m²`).join(' · ')}
+                            {' — '}{r.lignes.reduce((t, l) => t + l.montant, 0).toLocaleString('fr-FR')} € HT
                         </span>
                     </div>
                 ))}
