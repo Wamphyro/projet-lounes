@@ -217,7 +217,10 @@ const CLIENTS_SEED: Client[] = [
 
 export type DemandeCompte = {
     id: string;
+    prenom: string;
     nom: string;
+    dateNaissance?: string; // jj/mm/aaaa
+    societe?: string;       // facultatif → fiche Professionnel si renseignée
     email: string;
     tel: string;
     message?: string;
@@ -228,11 +231,13 @@ export type DemandeCompte = {
 
 const DEMANDES_COMPTE_SEED: DemandeCompte[] = [
     {
-        id: 'DCC-12', nom: 'Camille Lefèvre', email: 'c.lefevre@mail.fr', tel: '06 45 67 89 01',
+        id: 'DCC-12', prenom: 'Camille', nom: 'Lefèvre', dateNaissance: '27/06/1979',
+        email: 'c.lefevre@mail.fr', tel: '06 45 67 89 01',
         message: 'Je souhaite suivre mon devis salle de bain en ligne.', date: '22/07/2026', statut: 'À traiter',
     },
     {
-        id: 'DCC-13', nom: 'Antoine Girard', email: 'antoine.girard@mail.fr', tel: '07 11 22 33 44',
+        id: 'DCC-13', prenom: 'Antoine', nom: 'Girard', dateNaissance: '03/09/1988', societe: 'Girard Paysage',
+        email: 'antoine.girard@mail.fr', tel: '07 11 22 33 44',
         message: 'Projet terrasse au printemps, je veux préparer mon dossier.', date: '23/07/2026', statut: 'À traiter',
     },
 ];
@@ -248,7 +253,7 @@ const ACCES_SEED: Record<string, AccesClient> = {
     'CLI-101': { statut: 'Accès actif', email: 'client@demo.fr', depuis: '02/07/2026' },
 };
 
-export const useDemandesCompte = () => useCollection<DemandeCompte[]>('dc-demandes-compte', DEMANDES_COMPTE_SEED);
+export const useDemandesCompte = () => useCollection<DemandeCompte[]>('dc-demandes-compte-v2', DEMANDES_COMPTE_SEED);
 
 /** Prochain numéro de demande de compte (DCC-XX). */
 export const prochainIdDemandeCompte = (l: DemandeCompte[]) => {

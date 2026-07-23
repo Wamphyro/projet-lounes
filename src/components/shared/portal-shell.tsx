@@ -40,7 +40,10 @@ export function PortalShell({
        alimente les « Demandes de création de compte » du portail pro. — */
     const [demandes, setDemandes] = useDemandesCompte();
     const [inscription, setInscription] = useState(false);
+    const [iPrenom, setIPrenom] = useState('');
     const [iNom, setINom] = useState('');
+    const [iDn, setIDn] = useState(''); // aaaa-mm-jj (input date)
+    const [iSociete, setISociete] = useState('');
     const [iEmail, setIEmail] = useState('');
     const [iTel, setITel] = useState('');
     const [iMsg, setIMsg] = useState('');
@@ -48,11 +51,15 @@ export function PortalShell({
 
     const demanderCompte = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!iNom.trim() || !iEmail.trim()) return;
+        if (!iPrenom.trim() || !iNom.trim() || !iEmail.trim()) return;
+        const [a, m, j] = iDn.split('-');
         setDemandes([
             {
                 id: prochainIdDemandeCompte(demandes),
+                prenom: iPrenom.trim(),
                 nom: iNom.trim(),
+                dateNaissance: a && m && j ? `${j}/${m}/${a}` : undefined,
+                societe: iSociete.trim() || undefined,
                 email: iEmail.trim(),
                 tel: iTel.trim(),
                 message: iMsg.trim() || undefined,
@@ -157,9 +164,23 @@ export function PortalShell({
                                     <p style={{ fontSize: 13, color: 'var(--taupe)', marginBottom: 14 }}>
                                         Votre demande est vérifiée par le magasin puis rattachée à votre dossier client.
                                     </p>
+                                    <div className="form-grid" style={{ marginBottom: 12, gap: 12 }}>
+                                        <div className="field">
+                                            <label htmlFor="ins-prenom">Prénom *</label>
+                                            <input id="ins-prenom" value={iPrenom} onChange={(e) => setIPrenom(e.target.value)} required placeholder="Prénom" />
+                                        </div>
+                                        <div className="field">
+                                            <label htmlFor="ins-nom">Nom *</label>
+                                            <input id="ins-nom" value={iNom} onChange={(e) => setINom(e.target.value)} required placeholder="Nom" />
+                                        </div>
+                                    </div>
                                     <div className="field" style={{ marginBottom: 12 }}>
-                                        <label htmlFor="ins-nom">Nom et prénom *</label>
-                                        <input id="ins-nom" value={iNom} onChange={(e) => setINom(e.target.value)} required placeholder="Votre nom" />
+                                        <label htmlFor="ins-dn">Date de naissance</label>
+                                        <input id="ins-dn" type="date" value={iDn} onChange={(e) => setIDn(e.target.value)} />
+                                    </div>
+                                    <div className="field" style={{ marginBottom: 12 }}>
+                                        <label htmlFor="ins-societe">Nom de société (facultatif)</label>
+                                        <input id="ins-societe" value={iSociete} onChange={(e) => setISociete(e.target.value)} placeholder="Si compte professionnel" />
                                     </div>
                                     <div className="field" style={{ marginBottom: 12 }}>
                                         <label htmlFor="ins-email">Email *</label>

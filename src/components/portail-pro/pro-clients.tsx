@@ -80,11 +80,15 @@ export function ProClients() {
         setMode('fiche');
     };
 
+    /* Société renseignée → fiche Professionnel (la personne devient l'interlocuteur) ;
+       sinon fiche Particulier avec date de naissance. */
     const creerDepuisDemande = (d: DemandeCompte) => {
         const nouveau: Client = {
             id: prochainIdClient(clients),
-            nom: d.nom,
-            type: 'Particulier',
+            nom: d.societe ? d.societe : `${d.prenom} ${d.nom}`,
+            type: d.societe ? 'Professionnel' : 'Particulier',
+            contact: d.societe ? `${d.prenom} ${d.nom}` : undefined,
+            dateNaissance: d.societe ? undefined : d.dateNaissance,
             email: d.email,
             tel: d.tel,
             adresse: '',
@@ -184,11 +188,11 @@ export function ProClients() {
                             return (
                                 <div key={d.id} className="md-item" style={{ cursor: 'default' }}>
                                     <span className="l1">
-                                        <span>{d.nom} — {d.email}</span>
+                                        <span>{d.prenom} {d.nom}{d.societe ? ` (${d.societe})` : ''} — {d.email}</span>
                                         <span className="pill warn">{d.date}</span>
                                     </span>
                                     <span className="l2">
-                                        {d.tel}{d.message ? ` · « ${d.message} »` : ''}
+                                        {d.tel}{d.dateNaissance ? ` · né(e) le ${d.dateNaissance}` : ''}{d.message ? ` · « ${d.message} »` : ''}
                                     </span>
                                     <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                                         {match ? (
