@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import { SearchBar } from '@/components/shared/search-bar';
+import { MessageComposer } from '@/components/shared/message-composer';
 import {
-    useCommandes, useStock, horodatage,
+    useCommandes, useStock, useClients, horodatage,
     COMMANDE_STATUTS, type Commande, type CommandeStatut,
 } from '@/services/commerce';
 
@@ -29,9 +30,11 @@ const LIBELLE_ETAPE: Record<CommandeStatut, string> = {
 export function ProCommandes() {
     const [commandes, setCommandes] = useCommandes();
     const [stock, setStock] = useStock();
+    const [clients] = useClients();
     const [selId, setSelId] = useState<string | null>(null);
     const [blocage, setBlocage] = useState<string | null>(null);
     const [recherche, setRecherche] = useState('');
+    const [composer, setComposer] = useState(false);
 
     const visibles = recherche
         ? commandes.filter((c) =>
@@ -174,9 +177,26 @@ export function ProCommandes() {
                         <ul className="timeline">
                             {sel.etapes.map((e, i) => <li key={i}>{e}</li>)}
                         </ul>
+
+                        <div style={{ marginTop: 18 }}>
+                            <button className="btn" onClick={() => setComposer(true)}>✉ Prévenir le client</button>
+                        </div>
                     </div>
                 )}
             </div>
+
+            {composer && sel && (() => {
+                const fiche = clients.find((c) => c.nom === sel.client);
+                return (
+                    <MessageComposer
+                        contexte={{ type: 'commande', id: sel.id, client: sel.client, statut: sel.statut, montant: sel.montant, email: fiche?.email, tel: fiche?.tel }}
+                        onFermer={() => setComposer(false)}
+                        onTrace={(resume) =>
+                            setCommandes(commandes.map((x) => x.id === sel.id ? { ...x, etapes: [...x.etapes, `${resume} — ${horodatage()}`] } : x))
+                        }
+                    />
+                );
+            })()}
         </>
     );
 }

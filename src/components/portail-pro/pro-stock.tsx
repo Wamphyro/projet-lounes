@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { PRODUITS, getFamille, variantesDeProduit, getVariante, conditionnement, aireCarreau } from '@/lib/catalogue';
+import { SearchBar } from '@/components/shared/search-bar';
 import {
     useStock, useReceptions, prochainIdReception,
     stockDuModele, refsEnAlerte, SEUIL_STOCK,
@@ -19,7 +20,15 @@ export function ProStock() {
     const [receptions, setReceptions] = useReceptions();
 
     const [selSlug, setSelSlug] = useState<string>(PRODUITS[0].slug);
-    const sel = PRODUITS.find((p) => p.slug === selSlug) ?? PRODUITS[0];
+    const [recherche, setRecherche] = useState('');
+
+    const modelesVisibles = recherche
+        ? PRODUITS.filter((p) =>
+            `${p.nom} ${getFamille(p.famille)?.nom} ${variantesDeProduit(p).map((v) => `${v.ref} ${v.couleur} ${v.format}`).join(' ')}`
+                .toLowerCase().includes(recherche.toLowerCase()))
+        : PRODUITS;
+
+    const sel = PRODUITS.find((p) => p.slug === selSlug) ?? modelesVisibles[0] ?? PRODUITS[0];
     const selVariantes = variantesDeProduit(sel);
 
     const [panneau, setPanneau] = useState<'ferme' | 'manuel' | 'ia'>('ferme');
@@ -269,9 +278,16 @@ export function ProStock() {
             )}
 
             {/* ——— Modèles (gauche) → détail produit + références (droite) ——— */}
+            <SearchBar
+                value={recherche}
+                onChange={setRecherche}
+                placeholder="Modèle, famille, référence, couleur, format…"
+                total={PRODUITS.length}
+                trouves={modelesVisibles.length}
+            />
             <div className="md">
                 <div className="md-list">
-                    {PRODUITS.map((p) => {
+                    {modelesVisibles.map((p) => {
                         const total = stockDuModele(stock, p);
                         const alertes = refsEnAlerte(stock, p).length;
                         return (

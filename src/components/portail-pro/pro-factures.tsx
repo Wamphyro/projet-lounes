@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDropdown } from '@/components/shared/dropdown';
-import { useFactures, FACTURE_STATUTS, type FactureStatut } from '@/services/commerce';
+import { useFactures, useClients, FACTURE_STATUTS, type FactureStatut } from '@/services/commerce';
 import { exporterFacturePdf } from '@/services/document-pdf';
 import { SearchBar } from '@/components/shared/search-bar';
+import { MessageComposer } from '@/components/shared/message-composer';
 
 /** Factures (équipe) — issues des devis acceptés, statut À régler / Réglée. */
 
@@ -13,6 +14,8 @@ const tone = (s: FactureStatut) => (s === 'Réglée' ? 'ok' : 'warn');
 
 export function ProFactures() {
     const [factures, setFactures] = useFactures();
+    const [clients] = useClients();
+    const [composer, setComposer] = useState(false);
     const [selId, setSelId] = useState<string | null>(null);
     const [recherche, setRecherche] = useState('');
 
@@ -108,15 +111,25 @@ export function ProFactures() {
                                 <button className="btn dark" onClick={() => exporterFacturePdf(sel)}>
                                     Exporter en PDF
                                 </button>
-                                <span style={{ fontSize: 13, color: 'var(--taupe)' }}>
-                                    L&rsquo;envoi automatique par email arrivera avec le backend.
-                                </span>
+                                <button className="btn dark" onClick={() => setComposer(true)}>
+                                    ✉ Envoyer au client
+                                </button>
                             </div>
                         </div>
                     )}
                 </div>
                 </>
             )}
+
+            {composer && sel && (() => {
+                const fiche = clients.find((c) => c.nom === sel.client);
+                return (
+                    <MessageComposer
+                        contexte={{ type: 'facture', id: sel.id, client: sel.client, statut: sel.statut, montant: sel.total, email: sel.email || fiche?.email, tel: fiche?.tel }}
+                        onFermer={() => setComposer(false)}
+                    />
+                );
+            })()}
         </>
     );
 }

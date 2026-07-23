@@ -6,8 +6,9 @@ import { useSearchParams } from 'next/navigation';
 import { PRODUITS } from '@/lib/catalogue';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import { SearchBar } from '@/components/shared/search-bar';
+import { MessageComposer } from '@/components/shared/message-composer';
 import {
-    useDevis, useFactures, factureDepuisDevis, prochainIdDevis, totalDevis,
+    useDevis, useFactures, useClients, factureDepuisDevis, prochainIdDevis, totalDevis,
     DEVIS_STATUTS_MANUELS, type Devis, type DevisStatut, type LigneDevis,
 } from '@/services/commerce';
 import { exporterDevisPdf } from '@/services/document-pdf';
@@ -26,6 +27,8 @@ export function ProDevis() {
     const params = useSearchParams();
     const [devis, setDevis] = useDevis();
     const [factures, setFactures] = useFactures();
+    const [clients] = useClients();
+    const [composer, setComposer] = useState(false);
     const [selId, setSelId] = useState<string | null>(null);
     const [creation, setCreation] = useState(params.get('nouveau') === '1');
     const [recherche, setRecherche] = useState('');
@@ -251,6 +254,9 @@ export function ProDevis() {
                             <button className="btn dark" onClick={() => exporterDevisPdf(sel)}>
                                 Exporter en PDF
                             </button>
+                            <button className="btn dark" onClick={() => setComposer(true)}>
+                                ✉ Envoyer au client
+                            </button>
                             {sel.statut === 'Accepté' && !factureDuDevis && (
                                 <button className="btn" onClick={() => facturer(sel)}>
                                     Transformer en facture
@@ -265,6 +271,16 @@ export function ProDevis() {
                     </div>
                 ) : null}
             </div>
+
+            {composer && sel && (() => {
+                const fiche = clients.find((c) => c.nom === sel.client);
+                return (
+                    <MessageComposer
+                        contexte={{ type: 'devis', id: sel.id, client: sel.client, statut: sel.statut, montant: totalDevis(sel), email: sel.email || fiche?.email, tel: fiche?.tel }}
+                        onFermer={() => setComposer(false)}
+                    />
+                );
+            })()}
         </>
     );
 }
