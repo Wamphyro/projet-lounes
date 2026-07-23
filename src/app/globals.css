@@ -710,7 +710,7 @@ body::before {
 
 /* Signature électronique */
 .sigpad {
-    width: 100%; height: 190px; display: block; touch-action: none; cursor: crosshair;
+    width: 100%; height: clamp(240px, 45vh, 440px); display: block; touch-action: none; cursor: crosshair;
     background: #fff; border: 1.5px dashed var(--ambre); border-radius: 14px;
 }
 .qr-box {

@@ -39,7 +39,7 @@ export function SignatureModal({
 
     return (
         <div className="overlay" onClick={(e) => { if (e.target === e.currentTarget) onFermer(); }}>
-            <div className="composer" style={{ width: 'min(560px, 100%)' }} role="dialog" aria-label={titre}>
+            <div className="composer" style={{ width: 'min(900px, 100%)' }} role="dialog" aria-label={titre}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
                     <div>
                         <h2>{titre}</h2>
