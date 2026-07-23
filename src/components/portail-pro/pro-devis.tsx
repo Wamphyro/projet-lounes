@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PRODUITS } from '@/lib/catalogue';
 import { StatusDropdown } from '@/components/shared/dropdown';
+import { SearchBar } from '@/components/shared/search-bar';
 import {
     useDevis, useFactures, factureDepuisDevis, prochainIdDevis, totalDevis,
     DEVIS_STATUTS_MANUELS, type Devis, type DevisStatut, type LigneDevis,
@@ -27,8 +28,15 @@ export function ProDevis() {
     const [factures, setFactures] = useFactures();
     const [selId, setSelId] = useState<string | null>(null);
     const [creation, setCreation] = useState(params.get('nouveau') === '1');
+    const [recherche, setRecherche] = useState('');
 
-    const sel = devis.find((d) => d.id === selId) ?? (creation ? null : devis[0]);
+    const visibles = recherche
+        ? devis.filter((d) =>
+            `${d.id} ${d.client} ${d.email} ${d.statut} ${totalDevis(d)} ${d.lignes.map((l) => l.nom).join(' ')}`
+                .toLowerCase().includes(recherche.toLowerCase()))
+        : devis;
+
+    const sel = devis.find((d) => d.id === selId) ?? (creation ? null : visibles[0]);
     /* Garde-fou : un devis ne peut donner qu'une seule facture. */
     const factureDuDevis = sel ? factures.find((f) => f.devisId === sel.id) : undefined;
 
@@ -92,9 +100,17 @@ export function ProDevis() {
                 <button className="btn" onClick={() => { setCreation(true); setSelId(null); }}>+ Nouveau devis</button>
             </div>
 
+            <SearchBar
+                value={recherche}
+                onChange={setRecherche}
+                placeholder="N°, client, statut, matière, montant…"
+                total={devis.length}
+                trouves={visibles.length}
+            />
+
             <div className="md">
                 <div className="md-list">
-                    {devis.map((d) => (
+                    {visibles.map((d) => (
                         <button
                             key={d.id}
                             className={`md-item${sel?.id === d.id && !creation ? ' current' : ''}`}

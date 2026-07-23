@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { StatusDropdown } from '@/components/shared/dropdown';
+import { SearchBar } from '@/components/shared/search-bar';
 import {
     useCommandes, useStock, horodatage,
     COMMANDE_STATUTS, type Commande, type CommandeStatut,
@@ -30,7 +31,15 @@ export function ProCommandes() {
     const [stock, setStock] = useStock();
     const [selId, setSelId] = useState<string | null>(null);
     const [blocage, setBlocage] = useState<string | null>(null);
-    const sel = commandes.find((c) => c.id === selId) ?? commandes[0];
+    const [recherche, setRecherche] = useState('');
+
+    const visibles = recherche
+        ? commandes.filter((c) =>
+            `${c.id} ${c.client} ${c.detail} ${c.statut} ${c.montant} ${c.lignes.map((l) => `${l.ref} ${l.nom}`).join(' ')}`
+                .toLowerCase().includes(recherche.toLowerCase()))
+        : commandes;
+
+    const sel = commandes.find((c) => c.id === selId) ?? visibles[0];
 
     const manques = (c: Commande) =>
         c.lignes.filter((l) => (stock[l.ref] ?? 0) < l.quantite);
@@ -80,9 +89,17 @@ export function ProCommandes() {
                 </div>
             )}
 
+            <SearchBar
+                value={recherche}
+                onChange={setRecherche}
+                placeholder="N°, client, référence, statut, montant…"
+                total={commandes.length}
+                trouves={visibles.length}
+            />
+
             <div className="md">
                 <div className="md-list">
-                    {commandes.map((c) => (
+                    {visibles.map((c) => (
                         <button
                             key={c.id}
                             className={`md-item${sel?.id === c.id ? ' current' : ''}`}

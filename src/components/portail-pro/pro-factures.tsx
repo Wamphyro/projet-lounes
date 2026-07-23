@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import { useFactures, FACTURE_STATUTS, type FactureStatut } from '@/services/commerce';
 import { exporterFacturePdf } from '@/services/document-pdf';
+import { SearchBar } from '@/components/shared/search-bar';
 
 /** Factures (équipe) — issues des devis acceptés, statut À régler / Réglée. */
 
@@ -13,7 +14,15 @@ const tone = (s: FactureStatut) => (s === 'Réglée' ? 'ok' : 'warn');
 export function ProFactures() {
     const [factures, setFactures] = useFactures();
     const [selId, setSelId] = useState<string | null>(null);
-    const sel = factures.find((f) => f.id === selId) ?? factures[0];
+    const [recherche, setRecherche] = useState('');
+
+    const visibles = recherche
+        ? factures.filter((f) =>
+            `${f.id} ${f.client} ${f.email} ${f.devisId} ${f.statut} ${f.total} ${f.lignes.map((l) => l.nom).join(' ')}`
+                .toLowerCase().includes(recherche.toLowerCase()))
+        : factures;
+
+    const sel = factures.find((f) => f.id === selId) ?? visibles[0];
 
     const aEncaisser = factures.filter((f) => f.statut === 'À régler').reduce((t, f) => t + f.total, 0);
 
@@ -40,9 +49,17 @@ export function ProFactures() {
                     </p>
                 </div>
             ) : (
+                <>
+                <SearchBar
+                    value={recherche}
+                    onChange={setRecherche}
+                    placeholder="N°, client, devis d'origine, statut, montant…"
+                    total={factures.length}
+                    trouves={visibles.length}
+                />
                 <div className="md">
                     <div className="md-list">
-                        {factures.map((f) => (
+                        {visibles.map((f) => (
                             <button key={f.id} className={`md-item${sel?.id === f.id ? ' current' : ''}`} onClick={() => setSelId(f.id)}>
                                 <span className="l1">
                                     <span>{f.id} — {f.client}</span>
@@ -98,6 +115,7 @@ export function ProFactures() {
                         </div>
                     )}
                 </div>
+                </>
             )}
         </>
     );

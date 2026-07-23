@@ -8,6 +8,7 @@ import {
     type Client, type TypeClient,
 } from '@/services/commerce';
 import { DEMO_CLIENT, ECHANTILLONS_CLIENT } from '@/services/demo-data';
+import { SearchBar } from '@/components/shared/search-bar';
 
 /**
  * Comptes clients (équipe) — recherche, création, ÉDITION et fiche détaillée :
@@ -129,10 +130,13 @@ export function ProClients() {
                 <button className="btn" onClick={ouvrirCreation}>+ Nouveau client</button>
             </div>
 
-            <div className="field" style={{ maxWidth: 420, marginBottom: 22 }}>
-                <label htmlFor="cli-recherche">Rechercher</label>
-                <input id="cli-recherche" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Nom, interlocuteur, email, téléphone, ville…" />
-            </div>
+            <SearchBar
+                value={recherche}
+                onChange={setRecherche}
+                placeholder="Nom, interlocuteur, email, téléphone, ville…"
+                total={clients.length}
+                trouves={visibles.length}
+            />
 
             <div className="md">
                 <div className="md-list">
