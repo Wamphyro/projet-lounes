@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useDevis, totalDevis, CLIENT_DEMO_NOM, type DevisStatut } from '@/services/commerce';
+import { useDevis, totalDevis, horodatage, CLIENT_DEMO_NOM, type DevisStatut } from '@/services/commerce';
 import { exporterDevisPdf } from '@/services/document-pdf';
+import { SignatureModal } from '@/components/shared/signature-modal';
 
 /**
  * Devis (client) — miroir du store partagé : le client voit les devis émis
@@ -18,6 +19,7 @@ export function ClientDevis() {
     const [devis, setDevis] = useDevis();
     const mesDevis = devis.filter((d) => d.client === CLIENT_DEMO_NOM && d.statut !== 'Brouillon');
     const [selId, setSelId] = useState<string | null>(null);
+    const [signer, setSigner] = useState(false);
     const sel = mesDevis.find((d) => d.id === selId) ?? mesDevis[0];
 
     const decider = (id: string, statut: 'Accepté' | 'Refusé') =>
@@ -96,7 +98,7 @@ export function ClientDevis() {
                             <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
                                 {sel.statut === 'Envoyé' && (
                                     <>
-                                        <button className="btn" onClick={() => decider(sel.id, 'Accepté')}>Accepter ce devis</button>
+                                        <button className="btn" onClick={() => setSigner(true)}>Accepter et signer</button>
                                         <button className="btn dark" onClick={() => decider(sel.id, 'Refusé')}>Refuser</button>
                                     </>
                                 )}
@@ -106,7 +108,8 @@ export function ClientDevis() {
                             </div>
                             {sel.statut === 'Accepté' && (
                                 <p style={{ fontSize: 14, color: '#3e6e34', fontWeight: 600, marginTop: 16 }}>
-                                    Devis accepté — nous vous contactons pour planifier la suite. Merci !
+                                    Devis accepté{sel.signature ? ` et signé le ${sel.signature.date}` : ''} — nous vous
+                                    contactons pour planifier la suite. Merci !
                                 </p>
                             )}
                             {sel.statut === 'Facturé' && (
@@ -118,6 +121,21 @@ export function ClientDevis() {
                         </div>
                     )}
                 </div>
+            )}
+
+            {signer && sel && (
+                <SignatureModal
+                    docId={sel.id}
+                    titre="Bon pour accord — votre signature"
+                    avecQr={false}
+                    onFermer={() => setSigner(false)}
+                    onSigne={(image) => {
+                        setDevis(devis.map((d) => d.id === sel.id
+                            ? { ...d, statut: 'Accepté' as DevisStatut, signature: { image, date: horodatage() } }
+                            : d));
+                        setSigner(false);
+                    }}
+                />
             )}
         </>
     );

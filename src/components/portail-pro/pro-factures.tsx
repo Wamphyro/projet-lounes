@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDropdown } from '@/components/shared/dropdown';
-import { useFactures, useClients, FACTURE_STATUTS, type FactureStatut } from '@/services/commerce';
+import { useFactures, useClients, horodatage, FACTURE_STATUTS, type FactureStatut } from '@/services/commerce';
+import { SignatureModal } from '@/components/shared/signature-modal';
 import { exporterFacturePdf } from '@/services/document-pdf';
 import { SearchBar } from '@/components/shared/search-bar';
 import { MessageComposer } from '@/components/shared/message-composer';
@@ -16,6 +17,7 @@ export function ProFactures() {
     const [factures, setFactures] = useFactures();
     const [clients] = useClients();
     const [composer, setComposer] = useState(false);
+    const [signer, setSigner] = useState(false);
     const [selId, setSelId] = useState<string | null>(null);
     const [recherche, setRecherche] = useState('');
 
@@ -114,11 +116,37 @@ export function ProFactures() {
                                 <button className="btn dark" onClick={() => setComposer(true)}>
                                     ✉ Envoyer au client
                                 </button>
+                                {!sel.signature && (
+                                    <button className="btn dark" onClick={() => setSigner(true)}>
+                                        ✍ Faire signer
+                                    </button>
+                                )}
                             </div>
+                            {sel.signature && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 14, flexWrap: 'wrap' }}>
+                                    <img src={sel.signature.image} alt="Signature du client" className="sig-apercu" />
+                                    <span style={{ fontSize: 13, color: 'var(--taupe)' }}>
+                                        <span className="pill ok" style={{ marginRight: 8 }}>Signé</span>
+                                        Signature client — {sel.signature.date}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
                 </>
+            )}
+
+            {signer && sel && (
+                <SignatureModal
+                    docId={sel.id}
+                    titre="Signature du client"
+                    onFermer={() => setSigner(false)}
+                    onSigne={(image) => {
+                        setFactures(factures.map((f) => f.id === sel.id ? { ...f, signature: { image, date: horodatage() } } : f));
+                        setSigner(false);
+                    }}
+                />
             )}
 
             {composer && sel && (() => {

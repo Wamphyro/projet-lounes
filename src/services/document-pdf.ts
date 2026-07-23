@@ -270,7 +270,13 @@ export function exporterDevisPdf(d: Devis) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(...TAUPE);
-    doc.text(doc.splitTextToSize('Date et signature, précédées de la mention « bon pour accord »', DROITE - xSig - 10), xSig + 5, yBas + 5.5, { lineHeightFactor: 1.4 });
+    if (d.signature) {
+        /* Signature électronique intégrée au document */
+        doc.text(`Signé électroniquement le ${d.signature.date}`, xSig + 5, yBas + 5.5);
+        try { doc.addImage(d.signature.image, 'PNG', xSig + 5, yBas + 8, 52, 19); } catch { /* image invalide : cadre vierge */ }
+    } else {
+        doc.text(doc.splitTextToSize('Date et signature, précédées de la mention « bon pour accord »', DROITE - xSig - 10), xSig + 5, yBas + 5.5, { lineHeightFactor: 1.4 });
+    }
 
     pied(doc);
     ouvrir(doc, `Devis ${d.id} — ${LEGAL.denomination}`);
@@ -314,12 +320,27 @@ export function exporterFacturePdf(f: Facture) {
     const sousTotal = f.lignes.reduce((t, l) => t + l.surface * l.prix, 0);
     y = blocTotaux(doc, y + 2, 'Total TTC', sousTotal, f.remisePct, f.total);
 
-    /* Conditions de règlement */
+    /* Conditions de règlement (+ signature client éventuelle) */
+    const yCond = Math.max(y + 10, 232);
     conditions(
-        doc, Math.max(y + 10, 232), 'Conditions de règlement',
+        doc, yCond, 'Conditions de règlement',
         `Paiement à réception. En cas de retard, pénalités au taux légal et indemnité forfaitaire de recouvrement de 40 € (art. L441-10 C. com.). Pas d’escompte pour paiement anticipé. Les marchandises restent la propriété de ${LEGAL.denomination} jusqu’au paiement intégral (clause de réserve de propriété).`,
-        DROITE - M
+        f.signature ? 108 : DROITE - M
     );
+    if (f.signature) {
+        const xS = M + 120;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6.6);
+        doc.setTextColor(...AMBRE_F);
+        doc.setCharSpace(0.7);
+        doc.text('SIGNATURE CLIENT', xS, yCond);
+        doc.setCharSpace(0);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...TAUPE);
+        doc.text(`Signé électroniquement le ${f.signature.date}`, xS, yCond + 4.5);
+        try { doc.addImage(f.signature.image, 'PNG', xS, yCond + 7, 52, 19); } catch { /* image invalide */ }
+    }
 
     pied(doc);
     ouvrir(doc, `Facture ${f.id} — ${LEGAL.denomination}`);

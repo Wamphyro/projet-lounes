@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { PRODUITS } from '@/lib/catalogue';
 import {
-    useDevis, useCommandes, useDemandes, useStock,
+    useDevis, useCommandes, useDemandes, useStock, useParamRefs, useParamModeles,
     totalDevis, refsEnAlerte,
 } from '@/services/commerce';
 
@@ -13,11 +13,13 @@ export function ProDashboard() {
     const [commandes] = useCommandes();
     const [demandes] = useDemandes();
     const [stock] = useStock();
+    const [paramRefs] = useParamRefs();
+    const [paramModeles] = useParamModeles();
 
     const enCours = commandes.filter((c) => c.statut !== 'Livrée');
     const devisOuverts = devis.filter((d) => d.statut === 'Brouillon' || d.statut === 'Envoyé');
     const aTraiter = demandes.filter((d) => !d.traitee);
-    const sousSeuil = PRODUITS.filter((p) => refsEnAlerte(stock, p).length > 0);
+    const sousSeuil = PRODUITS.filter((p) => refsEnAlerte(stock, p, paramRefs, paramModeles).length > 0);
 
     return (
         <>

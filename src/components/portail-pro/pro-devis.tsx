@@ -7,8 +7,10 @@ import { PRODUITS } from '@/lib/catalogue';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import { SearchBar } from '@/components/shared/search-bar';
 import { MessageComposer } from '@/components/shared/message-composer';
+import { SignatureModal } from '@/components/shared/signature-modal';
 import {
-    useDevis, useFactures, useClients, factureDepuisDevis, prochainIdDevis, totalDevis,
+    useDevis, useFactures, useClients, useParamModeles, factureDepuisDevis,
+    prochainIdDevis, totalDevis, horodatage, prixEffectif,
     DEVIS_STATUTS_MANUELS, type Devis, type DevisStatut, type LigneDevis,
 } from '@/services/commerce';
 import { exporterDevisPdf } from '@/services/document-pdf';
@@ -28,7 +30,9 @@ export function ProDevis() {
     const [devis, setDevis] = useDevis();
     const [factures, setFactures] = useFactures();
     const [clients] = useClients();
+    const [paramModeles] = useParamModeles();
     const [composer, setComposer] = useState(false);
+    const [signer, setSigner] = useState(false);
     const [selId, setSelId] = useState<string | null>(null);
     const [creation, setCreation] = useState(params.get('nouveau') === '1');
     const [recherche, setRecherche] = useState('');
@@ -67,7 +71,8 @@ export function ProDevis() {
         const p = PRODUITS.find((x) => x.slug === fProduit)!;
         const s = parseFloat(fSurface.replace(',', '.'));
         if (!s || s <= 0) return;
-        setFLignes([...fLignes, { slug: p.slug, nom: p.nom, prix: p.prix, surface: s }]);
+        /* Prix effectif : paramétrage du modèle (rubrique Stock) sinon catalogue. */
+        setFLignes([...fLignes, { slug: p.slug, nom: p.nom, prix: prixEffectif(p, paramModeles), surface: s }]);
         setFSurface('');
     };
 
@@ -149,7 +154,7 @@ export function ProDevis() {
                                 <label htmlFor="nd-prod">Référence (catalogue)</label>
                                 <select id="nd-prod" value={fProduit} onChange={(e) => setFProduit(e.target.value)}>
                                     {PRODUITS.map((p) => (
-                                        <option key={p.slug} value={p.slug}>{p.nom} — {p.prix} €/m²</option>
+                                        <option key={p.slug} value={p.slug}>{p.nom} — {prixEffectif(p, paramModeles)} €/m²</option>
                                     ))}
                                 </select>
                             </div>
@@ -245,6 +250,15 @@ export function ProDevis() {
                                 {sel.notes}
                             </p>
                         )}
+                        {sel.signature && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 12, flexWrap: 'wrap' }}>
+                                <img src={sel.signature.image} alt="Signature du client" className="sig-apercu" />
+                                <span style={{ fontSize: 13, color: 'var(--taupe)' }}>
+                                    <span className="pill ok" style={{ marginRight: 8 }}>Signé</span>
+                                    Bon pour accord — {sel.signature.date}
+                                </span>
+                            </div>
+                        )}
                         {sel.statut === 'Envoyé' && (
                             <p style={{ fontSize: 13, color: 'var(--ambre-fonce)', marginTop: 14 }}>
                                 Visible par le client dans son espace — en attente de sa décision.
@@ -257,6 +271,11 @@ export function ProDevis() {
                             <button className="btn dark" onClick={() => setComposer(true)}>
                                 ✉ Envoyer au client
                             </button>
+                            {(sel.statut === 'Envoyé' || sel.statut === 'Accepté') && !sel.signature && (
+                                <button className="btn dark" onClick={() => setSigner(true)}>
+                                    ✍ Faire signer
+                                </button>
+                            )}
                             {sel.statut === 'Accepté' && !factureDuDevis && (
                                 <button className="btn" onClick={() => facturer(sel)}>
                                     Transformer en facture
@@ -271,6 +290,21 @@ export function ProDevis() {
                     </div>
                 ) : null}
             </div>
+
+            {signer && sel && (
+                <SignatureModal
+                    docId={sel.id}
+                    titre="Bon pour accord — signature du client"
+                    onFermer={() => setSigner(false)}
+                    onSigne={(image) => {
+                        /* La signature vaut bon pour accord : un devis « Envoyé » passe « Accepté ». */
+                        setDevis(devis.map((d) => d.id === sel.id
+                            ? { ...d, signature: { image, date: horodatage() }, statut: d.statut === 'Envoyé' ? 'Accepté' as DevisStatut : d.statut }
+                            : d));
+                        setSigner(false);
+                    }}
+                />
+            )}
 
             {composer && sel && (() => {
                 const fiche = clients.find((c) => c.nom === sel.client);

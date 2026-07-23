@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { PRODUITS, getFamille, variantesDeProduit, getVariante, conditionnement, aireCarreau } from '@/lib/catalogue';
 import { SearchBar } from '@/components/shared/search-bar';
 import {
-    useStock, useReceptions, prochainIdReception,
-    stockDuModele, refsEnAlerte, SEUIL_STOCK,
+    useStock, useReceptions, useParamRefs, useParamModeles, prochainIdReception,
+    stockDuModele, refsEnAlerte, seuilEffectif, prixEffectif,
     type LigneReception, type Reception,
 } from '@/services/commerce';
 
@@ -18,6 +18,16 @@ import {
 export function ProStock() {
     const [stock, setStock] = useStock();
     const [receptions, setReceptions] = useReceptions();
+    const [paramRefs, setParamRefs] = useParamRefs();
+    const [paramModeles, setParamModeles] = useParamModeles();
+
+    /* Paramétrage en cours d'édition (référence ou modèle) */
+    const [editRef, setEditRef] = useState<string | null>(null);
+    const [editModele, setEditModele] = useState(false);
+    const [pCrx, setPCrx] = useState('');
+    const [pSeuilRef, setPSeuilRef] = useState('');
+    const [pPrix, setPPrix] = useState('');
+    const [pSeuilModele, setPSeuilModele] = useState('');
 
     const [selSlug, setSelSlug] = useState<string>(PRODUITS[0].slug);
     const [recherche, setRecherche] = useState('');
@@ -34,7 +44,7 @@ export function ProStock() {
     const [panneau, setPanneau] = useState<'ferme' | 'manuel' | 'ia'>('ferme');
     const [confirmation, setConfirmation] = useState<string | null>(null);
 
-    const modelesEnAlerte = PRODUITS.filter((p) => refsEnAlerte(stock, p).length > 0).length;
+    const modelesEnAlerte = PRODUITS.filter((p) => refsEnAlerte(stock, p, paramRefs, paramModeles).length > 0).length;
     const totalRefs = PRODUITS.reduce((t, p) => t + variantesDeProduit(p).length, 0);
 
     /* — Formulaire BL manuel (par référence, en paquets + prix d'achat) — */
@@ -57,7 +67,8 @@ export function ProStock() {
     const changerRef = (ref: string) => {
         setFRef(ref);
         const v = getVariante(ref)!;
-        setFCarreaux(String(conditionnement(v.format)?.carreaux ?? ''));
+        /* Conditionnement paramétré sur la référence, sinon suggestion standard. */
+        setFCarreaux(String(paramRefs[ref]?.carreauxParPaquet ?? conditionnement(v.format)?.carreaux ?? ''));
         setFPaquets(''); setFQteM2(''); setFUnite('m2');
     };
 
@@ -312,35 +323,116 @@ export function ProStock() {
                         <div style={{ flex: 1, minWidth: 220 }}>
                             <h2>{sel.nom}</h2>
                             <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 4 }}>
-                                {getFamille(sel.famille)?.nom} · {sel.prix} €/m² TTC · {sel.finitions.join(' / ')}
+                                {getFamille(sel.famille)?.nom} · {prixEffectif(sel, paramModeles)} €/m² TTC
+                                {paramModeles[sel.slug]?.prix ? ' (personnalisé)' : ''} · {sel.finitions.join(' / ')}
                                 {sel.pei ? ` · PEI ${sel.pei}` : ''}{sel.glissance ? ` · ${sel.glissance}` : ''}
                             </p>
                             <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 6 }}>
                                 Total en stock : <b style={{ color: 'var(--encre)' }}>{stockDuModele(stock, sel)} m²</b> sur {selVariantes.length} références
                             </p>
                         </div>
+                        <button
+                            className="chip"
+                            onClick={() => {
+                                setEditModele(!editModele); setEditRef(null);
+                                setPPrix(String(paramModeles[sel.slug]?.prix ?? sel.prix));
+                                setPSeuilModele(String(paramModeles[sel.slug]?.seuil ?? ''));
+                            }}
+                        >
+                            ⚙ Paramétrer le modèle
+                        </button>
                     </div>
+
+                    {/* ——— Paramétrage du MODÈLE (générique) ——— */}
+                    {editModele && (
+                        <div className="form-panel" style={{ margin: '14px 0 4px' }}>
+                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                <div className="field" style={{ width: 150 }}>
+                                    <label htmlFor="pm-prix">Prix de vente €/m²</label>
+                                    <input id="pm-prix" type="number" min="0" step="0.5" value={pPrix} onChange={(e) => setPPrix(e.target.value)} />
+                                </div>
+                                <div className="field" style={{ width: 190 }}>
+                                    <label htmlFor="pm-seuil">Seuil de réappro par défaut (m²)</label>
+                                    <input id="pm-seuil" type="number" min="0" step="5" value={pSeuilModele} onChange={(e) => setPSeuilModele(e.target.value)} placeholder="30 (standard)" />
+                                </div>
+                                <button
+                                    className="btn"
+                                    onClick={() => {
+                                        const prix = parseFloat(pPrix.replace(',', '.'));
+                                        const seuil = parseFloat(pSeuilModele.replace(',', '.'));
+                                        setParamModeles({
+                                            ...paramModeles,
+                                            [sel.slug]: {
+                                                ...(prix > 0 && prix !== sel.prix ? { prix } : {}),
+                                                ...(seuil > 0 ? { seuil } : {}),
+                                            },
+                                        });
+                                        setEditModele(false);
+                                    }}
+                                >
+                                    Enregistrer
+                                </button>
+                                <button
+                                    className="btn-x"
+                                    onClick={() => {
+                                        const p2 = { ...paramModeles };
+                                        delete p2[sel.slug];
+                                        setParamModeles(p2);
+                                        setEditModele(false);
+                                    }}
+                                >
+                                    Réinitialiser (catalogue)
+                                </button>
+                            </div>
+                            <p style={{ fontSize: 12, color: 'var(--taupe)', marginTop: 10 }}>
+                                Ces réglages s&rsquo;appliquent au modèle entier (le prix sert aux nouveaux devis,
+                                le seuil à toutes ses références sauf réglage spécifique).
+                            </p>
+                        </div>
+                    )}
 
                     <div className="table-scroll" style={{ marginTop: 16 }}>
                         <table className="data-table">
                             <thead>
-                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Cond. standard</th><th>Stock (m²)</th><th>État</th></tr>
+                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Conditionnement</th><th>Seuil</th><th>Stock (m²)</th><th>État</th><th></th></tr>
                             </thead>
                             <tbody>
                                 {selVariantes.map((v) => {
                                     const s = stock[v.ref] ?? 0;
+                                    const a = aireCarreau(v.format);
+                                    const crxPerso = paramRefs[v.ref]?.carreauxParPaquet;
                                     const c = conditionnement(v.format);
+                                    const seuil = seuilEffectif(v, paramRefs, paramModeles);
                                     return (
                                         <tr key={v.ref}>
                                             <td style={{ fontWeight: 600 }}>{v.ref}</td>
                                             <td>{v.couleur}</td>
                                             <td>{v.format}</td>
-                                            <td>{c ? `${c.carreaux} crx · ${c.m2} m²/paquet` : 'Au m²'}</td>
+                                            <td>
+                                                {crxPerso && a
+                                                    ? `${crxPerso} crx · ${Math.round(crxPerso * a * 100) / 100} m²/paquet (perso)`
+                                                    : c ? `${c.carreaux} crx · ${c.m2} m²/paquet` : 'Au m²'}
+                                            </td>
+                                            <td>{seuil} m²{paramRefs[v.ref]?.seuil ? ' *' : ''}</td>
                                             <td>{s}</td>
                                             <td>
                                                 {s === 0 ? <span className="pill bad">Rupture</span>
-                                                    : s < SEUIL_STOCK ? <span className="pill warn">Réappro</span>
+                                                    : s < seuil ? <span className="pill warn">Réappro</span>
                                                     : <span className="pill ok">OK</span>}
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="chip"
+                                                    style={{ padding: '4px 10px' }}
+                                                    aria-label={`Paramétrer ${v.ref}`}
+                                                    onClick={() => {
+                                                        setEditRef(editRef === v.ref ? null : v.ref); setEditModele(false);
+                                                        setPCrx(String(paramRefs[v.ref]?.carreauxParPaquet ?? c?.carreaux ?? ''));
+                                                        setPSeuilRef(String(paramRefs[v.ref]?.seuil ?? ''));
+                                                    }}
+                                                >
+                                                    ⚙
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -348,6 +440,60 @@ export function ProStock() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* ——— Paramétrage d'une RÉFÉRENCE ——— */}
+                    {editRef && (
+                        <div className="form-panel" style={{ marginTop: 14 }}>
+                            <h3 style={{ fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--taupe)' }}>
+                                Paramétrer la référence {editRef}
+                            </h3>
+                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                {aireCarreau(getVariante(editRef)?.format ?? '') && (
+                                    <div className="field" style={{ width: 190 }}>
+                                        <label htmlFor="pr-crx">Carreaux / paquet (fournisseur)</label>
+                                        <input id="pr-crx" type="number" min="1" step="1" value={pCrx} onChange={(e) => setPCrx(e.target.value)} />
+                                    </div>
+                                )}
+                                <div className="field" style={{ width: 190 }}>
+                                    <label htmlFor="pr-seuil">Seuil de réappro spécifique (m²)</label>
+                                    <input id="pr-seuil" type="number" min="0" step="5" value={pSeuilRef} onChange={(e) => setPSeuilRef(e.target.value)} placeholder="hérite du modèle" />
+                                </div>
+                                <button
+                                    className="btn"
+                                    onClick={() => {
+                                        const crx = Math.floor(parseFloat(pCrx.replace(',', '.')));
+                                        const seuil = parseFloat(pSeuilRef.replace(',', '.'));
+                                        const std = conditionnement(getVariante(editRef)!.format)?.carreaux;
+                                        setParamRefs({
+                                            ...paramRefs,
+                                            [editRef]: {
+                                                ...(crx > 0 && crx !== std ? { carreauxParPaquet: crx } : {}),
+                                                ...(seuil > 0 ? { seuil } : {}),
+                                            },
+                                        });
+                                        setEditRef(null);
+                                    }}
+                                >
+                                    Enregistrer
+                                </button>
+                                <button
+                                    className="btn-x"
+                                    onClick={() => {
+                                        const p2 = { ...paramRefs };
+                                        delete p2[editRef];
+                                        setParamRefs(p2);
+                                        setEditRef(null);
+                                    }}
+                                >
+                                    Réinitialiser
+                                </button>
+                            </div>
+                            <p style={{ fontSize: 12, color: 'var(--taupe)', marginTop: 10 }}>
+                                Ces réglages priment sur ceux du modèle pour cette référence uniquement
+                                (le conditionnement pré-remplit les réceptions de BL, le seuil pilote l&rsquo;alerte réappro).
+                            </p>
+                        </div>
+                    )}
                     <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 12 }}>
                         Le stock n&rsquo;est modifiable que par réception de BL (traçée). Les corrections
                         d&rsquo;inventaire avec motif arriveront avec le backend.

@@ -17,6 +17,9 @@ import { TOUTES_VARIANTES, variantesDeProduit, type Produit } from '@/lib/catalo
 /* ============================== Types ============================== */
 
 export type DevisStatut = 'Brouillon' | 'Envoyé' | 'Accepté' | 'Refusé' | 'Facturé';
+
+/** Signature électronique (bon pour accord / réception) — image PNG en dataURL. */
+export type Signature = { image: string; date: string };
 export type LigneDevis = { slug: string; nom: string; prix: number; surface: number };
 export type Devis = {
     id: string;
@@ -27,6 +30,7 @@ export type Devis = {
     lignes: LigneDevis[];
     remisePct: number;
     notes?: string;
+    signature?: Signature;
 };
 
 export type CommandeStatut = 'En préparation' | 'Prête au retrait' | 'En livraison' | 'Livrée';
@@ -217,6 +221,7 @@ export type Facture = {
     remisePct: number;
     total: number;
     statut: FactureStatut;
+    signature?: Signature;
 };
 
 export const FACTURE_STATUTS: FactureStatut[] = ['À régler', 'Réglée'];
@@ -298,13 +303,33 @@ export const STOCK_INITIAL: Record<string, number> = Object.fromEntries(
 );
 export const SEUIL_STOCK = 30; // seuil de réappro PAR RÉFÉRENCE (m²)
 
+/* ——— Paramétrage (surcouche locale du catalogue SSOT) ———
+   Le catalogue vit dans le code ; les réglages métier ajustables par l'équipe
+   (prix de vente, seuils, conditionnement fournisseur) vivent ici et le
+   surchargent. Firestore reprendra ces deux collections telles quelles. */
+export type ParamRef = { carreauxParPaquet?: number; seuil?: number };
+export type ParamModele = { prix?: number; seuil?: number };
+
+export const prixEffectif = (p: Produit, pm: Record<string, ParamModele>) =>
+    pm[p.slug]?.prix ?? p.prix;
+
+export const seuilEffectif = (
+    v: { ref: string; produit: string },
+    pr: Record<string, ParamRef>,
+    pm: Record<string, ParamModele>
+) => pr[v.ref]?.seuil ?? pm[v.produit]?.seuil ?? SEUIL_STOCK;
+
 /** Stock total d'un modèle = somme de ses références. */
 export const stockDuModele = (stock: Record<string, number>, p: Produit) =>
     variantesDeProduit(p).reduce((t, v) => t + (stock[v.ref] ?? 0), 0);
 
-/** Références d'un modèle sous le seuil (ou en rupture). */
-export const refsEnAlerte = (stock: Record<string, number>, p: Produit) =>
-    variantesDeProduit(p).filter((v) => (stock[v.ref] ?? 0) < SEUIL_STOCK);
+/** Références d'un modèle sous le seuil effectif (ou en rupture). */
+export const refsEnAlerte = (
+    stock: Record<string, number>,
+    p: Produit,
+    pr: Record<string, ParamRef> = {},
+    pm: Record<string, ParamModele> = {}
+) => variantesDeProduit(p).filter((v) => (stock[v.ref] ?? 0) < seuilEffectif(v, pr, pm));
 
 /* ==================== Persistance + hook générique ==================== */
 
@@ -350,6 +375,8 @@ export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDE
 export const useStock = () => useCollection<Record<string, number>>('dc-stock-v2', STOCK_INITIAL);
 export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v3', RECEPTIONS_SEED);
 export const useRdv = () => useCollection<Rdv[]>('dc-rdv', RDV_SEED);
+export const useParamRefs = () => useCollection<Record<string, ParamRef>>('dc-param-refs', {});
+export const useParamModeles = () => useCollection<Record<string, ParamModele>>('dc-param-modeles', {});
 export const useFactures = () => useCollection<Facture[]>('dc-factures', FACTURES_SEED);
 export const useClients = () => useCollection<Client[]>('dc-clients', CLIENTS_SEED);
 
