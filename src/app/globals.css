@@ -739,6 +739,9 @@ body::before {
 .searchbar input:focus {
     outline: none; border-color: var(--ambre); box-shadow: 0 0 0 3px rgba(192, 133, 43, .15);
 }
+/* Une seule croix : on masque celle que le navigateur ajoute aux type=search */
+.searchbar input::-webkit-search-cancel-button,
+.searchbar input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
 .searchbar .effacer {
     position: absolute; right: 8px; width: 26px; height: 26px; border-radius: 100px;
     border: none; background: var(--sable); color: var(--taupe); cursor: pointer;

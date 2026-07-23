@@ -4,9 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
     useClients, useDevis, useCommandes, useFactures, useRdv,
+    useDemandesCompte, useAccesClients, horodatage,
     prochainIdClient, totalDevis, ORIGINES_CLIENT,
-    type Client, type TypeClient,
+    type Client, type TypeClient, type DemandeCompte,
 } from '@/services/commerce';
+import { genererCode } from '@/services/provider';
 import { DEMO_CLIENT, ECHANTILLONS_CLIENT } from '@/services/demo-data';
 import { SearchBar } from '@/components/shared/search-bar';
 
@@ -58,9 +60,44 @@ export function ProClients() {
     const [factures] = useFactures();
     const [rdv] = useRdv();
 
+    const [demandesCompte, setDemandesCompte] = useDemandesCompte();
+    const [acces, setAcces] = useAccesClients();
+
     const [recherche, setRecherche] = useState('');
     const [selId, setSelId] = useState<string | null>(null);
     const [mode, setMode] = useState<'fiche' | 'creation' | 'edition'>('fiche');
+    const [rattachManuel, setRattachManuel] = useState<Record<string, string>>({});
+
+    /* — Demandes de création de compte (espace client) — */
+    const aTraiter = demandesCompte.filter((d) => d.statut === 'À traiter');
+    const correspondance = (d: DemandeCompte) =>
+        clients.find((c) => c.email.toLowerCase() === d.email.toLowerCase() && c.email !== '');
+
+    const rattacher = (d: DemandeCompte, clientId: string) => {
+        setAcces({ ...acces, [clientId]: { statut: 'Accès actif', email: d.email, depuis: horodatage() } });
+        setDemandesCompte(demandesCompte.map((x) => (x.id === d.id ? { ...x, statut: 'Rattachée', clientId } : x)));
+        setSelId(clientId);
+        setMode('fiche');
+    };
+
+    const creerDepuisDemande = (d: DemandeCompte) => {
+        const nouveau: Client = {
+            id: prochainIdClient(clients),
+            nom: d.nom,
+            type: 'Particulier',
+            email: d.email,
+            tel: d.tel,
+            adresse: '',
+            origine: 'Site internet',
+            notes: d.message ? `Demande de compte du ${d.date} : « ${d.message} »` : undefined,
+            creeLe: new Date().toLocaleDateString('fr-FR'),
+        };
+        setClients([nouveau, ...clients]);
+        rattacher(d, nouveau.id);
+    };
+
+    const refuserDemande = (d: DemandeCompte) =>
+        setDemandesCompte(demandesCompte.map((x) => (x.id === d.id ? { ...x, statut: 'Refusée' } : x)));
 
     const visibles = recherche
         ? clients.filter((c) =>
@@ -129,6 +166,70 @@ export function ProClients() {
                 </div>
                 <button className="btn" onClick={ouvrirCreation}>+ Nouveau client</button>
             </div>
+
+            {/* ——— Demandes de création de compte (espace client) ——— */}
+            {aTraiter.length > 0 && (
+                <div className="md-detail" style={{ marginBottom: 24, borderColor: 'var(--ambre)' }}>
+                    <h2>
+                        Demandes de création de compte
+                        <span className="pill warn" style={{ marginLeft: 10 }}>{aTraiter.length} à traiter</span>
+                    </h2>
+                    <p style={{ fontSize: 13, color: 'var(--taupe)', margin: '6px 0 14px' }}>
+                        Rattachez chaque demande à la bonne fiche client — correspondance automatique par email,
+                        choix manuel, ou création d&rsquo;une nouvelle fiche depuis le formulaire de la demande.
+                    </p>
+                    <div className="md-list">
+                        {aTraiter.map((d) => {
+                            const match = correspondance(d);
+                            return (
+                                <div key={d.id} className="md-item" style={{ cursor: 'default' }}>
+                                    <span className="l1">
+                                        <span>{d.nom} — {d.email}</span>
+                                        <span className="pill warn">{d.date}</span>
+                                    </span>
+                                    <span className="l2">
+                                        {d.tel}{d.message ? ` · « ${d.message} »` : ''}
+                                    </span>
+                                    <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                                        {match ? (
+                                            <>
+                                                <span style={{ fontSize: 13 }}>
+                                                    <span className="pill ok" style={{ marginRight: 6 }}>Correspondance</span>
+                                                    {match.id} — {match.nom}
+                                                </span>
+                                                <button className="btn" style={{ padding: '7px 16px' }} onClick={() => rattacher(d, match.id)}>
+                                                    Rattacher à cette fiche
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="pill off">Aucune correspondance email</span>
+                                                <select
+                                                    value={rattachManuel[d.id] ?? ''}
+                                                    onChange={(e) => setRattachManuel({ ...rattachManuel, [d.id]: e.target.value })}
+                                                    style={{ font: 'inherit', fontSize: 13, padding: '7px 10px', borderRadius: 10, border: '1px solid var(--ligne)', background: 'var(--creme-2)' }}
+                                                >
+                                                    <option value="">Rattacher manuellement à…</option>
+                                                    {clients.map((c) => <option key={c.id} value={c.id}>{c.id} — {c.nom}</option>)}
+                                                </select>
+                                                {rattachManuel[d.id] && (
+                                                    <button className="btn" style={{ padding: '7px 16px' }} onClick={() => rattacher(d, rattachManuel[d.id])}>
+                                                        Rattacher
+                                                    </button>
+                                                )}
+                                                <button className="btn dark" style={{ padding: '7px 16px' }} onClick={() => creerDepuisDemande(d)}>
+                                                    + Créer une nouvelle fiche
+                                                </button>
+                                            </>
+                                        )}
+                                        <button className="btn-x" onClick={() => refuserDemande(d)}>Refuser</button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <SearchBar
                 value={recherche}
@@ -254,6 +355,62 @@ export function ProClients() {
                                 {sel.siret && <tr><td>SIRET</td><td>{sel.siret}</td></tr>}
                             </tbody>
                         </table>
+
+                        {/* ——— Connexion & autorisations (espace client) ——— */}
+                        <h3 style={H3}>Connexion &amp; autorisations</h3>
+                        {(() => {
+                            const a = acces[sel.id];
+                            if (!a) {
+                                return (
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <span className="pill off">Aucun accès à l&rsquo;espace client</span>
+                                        {sel.email ? (
+                                            <button
+                                                className="btn dark"
+                                                style={{ padding: '7px 16px' }}
+                                                onClick={() =>
+                                                    setAcces({ ...acces, [sel.id]: { statut: 'Invitation envoyée', email: sel.email, code: genererCode(sel.email + sel.id), depuis: horodatage() } })
+                                                }
+                                            >
+                                                Inviter à l&rsquo;espace client
+                                            </button>
+                                        ) : (
+                                            <span style={{ fontSize: 13, color: 'var(--taupe)' }}>Renseignez un email pour pouvoir inviter ce client.</span>
+                                        )}
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <span className={`pill ${a.statut === 'Accès actif' ? 'ok' : a.statut === 'Suspendu' ? 'bad' : 'warn'}`}>{a.statut}</span>
+                                    <span style={{ fontSize: 13, color: 'var(--taupe)' }}>{a.email} · depuis le {a.depuis}</span>
+                                    {a.statut === 'Invitation envoyée' && (
+                                        <>
+                                            {a.code && <span className="chip" style={{ fontFamily: 'monospace', cursor: 'default' }}>{a.code}</span>}
+                                            <button className="btn" style={{ padding: '7px 16px' }} onClick={() => setAcces({ ...acces, [sel.id]: { ...a, statut: 'Accès actif', code: undefined, depuis: horodatage() } })}>
+                                                Marquer l&rsquo;accès actif
+                                            </button>
+                                            <button
+                                                className="btn-x"
+                                                onClick={() => { const a2 = { ...acces }; delete a2[sel.id]; setAcces(a2); }}
+                                            >
+                                                Révoquer l&rsquo;invitation
+                                            </button>
+                                        </>
+                                    )}
+                                    {a.statut === 'Accès actif' && (
+                                        <button className="btn-x" onClick={() => setAcces({ ...acces, [sel.id]: { ...a, statut: 'Suspendu' } })}>Suspendre</button>
+                                    )}
+                                    {a.statut === 'Suspendu' && (
+                                        <button className="btn" style={{ padding: '7px 16px' }} onClick={() => setAcces({ ...acces, [sel.id]: { ...a, statut: 'Accès actif' } })}>Réactiver</button>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                        <p style={{ fontSize: 12, color: 'var(--taupe)', marginTop: 8 }}>
+                            Avec le backend : invitation envoyée par email (lien signé), compte créé via Firebase
+                            Auth (mot de passe ou Google) et rattaché automatiquement à cette fiche.
+                        </p>
 
                         {sel.notes && (
                             <>

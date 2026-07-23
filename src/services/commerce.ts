@@ -209,6 +209,48 @@ const CLIENTS_SEED: Client[] = [
     { id: 'CLI-109', nom: 'SCI Les Remparts', type: 'Professionnel', email: 'contact@remparts.fr', tel: '03 80 55 44 33', adresse: '2 rempart Saint-Jean, 21200 Beaune', contact: 'Direction de l’hôtel', origine: 'Prescripteur (architecte…)', notes: 'Projet 12 salles d’eau — demande de devis en cours.', creeLe: '19/07/2026' },
 ];
 
+/* ——— Accès des clients du MAGASIN à leur espace client ———
+   (géré par l'équipe du magasin — le provider ne gère que les comptes pro.)
+   Un client demande la création de son compte → l'équipe rattache la demande
+   à la bonne fiche client (correspondance auto par email, ou manuelle, ou
+   création d'une nouvelle fiche depuis le formulaire de la demande). */
+
+export type DemandeCompte = {
+    id: string;
+    nom: string;
+    email: string;
+    tel: string;
+    message?: string;
+    date: string;
+    statut: 'À traiter' | 'Rattachée' | 'Refusée';
+    clientId?: string;
+};
+
+const DEMANDES_COMPTE_SEED: DemandeCompte[] = [
+    {
+        id: 'DCC-12', nom: 'Camille Lefèvre', email: 'c.lefevre@mail.fr', tel: '06 45 67 89 01',
+        message: 'Je souhaite suivre mon devis salle de bain en ligne.', date: '22/07/2026', statut: 'À traiter',
+    },
+    {
+        id: 'DCC-13', nom: 'Antoine Girard', email: 'antoine.girard@mail.fr', tel: '07 11 22 33 44',
+        message: 'Projet terrasse au printemps, je veux préparer mon dossier.', date: '23/07/2026', statut: 'À traiter',
+    },
+];
+
+export type AccesClient = {
+    statut: 'Invitation envoyée' | 'Accès actif' | 'Suspendu';
+    email: string;
+    code?: string;
+    depuis: string;
+};
+
+const ACCES_SEED: Record<string, AccesClient> = {
+    'CLI-101': { statut: 'Accès actif', email: 'client@demo.fr', depuis: '02/07/2026' },
+};
+
+export const useDemandesCompte = () => useCollection<DemandeCompte[]>('dc-demandes-compte', DEMANDES_COMPTE_SEED);
+export const useAccesClients = () => useCollection<Record<string, AccesClient>>('dc-acces-clients', ACCES_SEED);
+
 /** Facture — issue de la transformation d'un devis accepté (1 devis → 1 facture). */
 export type FactureStatut = 'À régler' | 'Réglée';
 export type Facture = {
