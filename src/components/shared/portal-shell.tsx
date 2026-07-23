@@ -87,6 +87,82 @@ export function PortalShell({
 
     if (connecte === null) return null;
 
+    /* ——— Écran d'INSCRIPTION (espace client) : vue à part entière,
+           remplace la connexion dans la carte — pas d'empilement. ——— */
+    if (!connecte && type === 'client' && inscription) {
+        return (
+            <div className="portal-login">
+                <div className="form-panel login-card">
+                    <Link href="/" className="portal-brand" style={{ color: 'var(--encre)', marginBottom: 22 }}>
+                        <Monogram className="mark" />
+                        <span className="word">{titre}</span>
+                    </Link>
+                    <h1 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 26, margin: '4px 0 6px' }}>
+                        Créer mon compte
+                    </h1>
+                    <p style={{ fontSize: 14, color: 'var(--taupe)', marginBottom: 20 }}>
+                        Votre demande est vérifiée par le magasin puis rattachée à votre dossier client.
+                    </p>
+                    {iEnvoyee ? (
+                        <>
+                            <div className="form-ok">
+                                <b>Demande envoyée !</b> L&rsquo;équipe du magasin la rattache à votre dossier
+                                et vous confirme l&rsquo;ouverture de votre accès par email.
+                            </div>
+                            <button className="btn" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }} onClick={() => { setInscription(false); setIEnvoyee(false); }}>
+                                Retour à la connexion
+                            </button>
+                        </>
+                    ) : (
+                        <form onSubmit={demanderCompte}>
+                            <div className="form-grid" style={{ marginBottom: 14, gap: 12 }}>
+                                <div className="field">
+                                    <label htmlFor="ins-prenom">Prénom *</label>
+                                    <input id="ins-prenom" value={iPrenom} onChange={(e) => setIPrenom(e.target.value)} required placeholder="Prénom" />
+                                </div>
+                                <div className="field">
+                                    <label htmlFor="ins-nom">Nom *</label>
+                                    <input id="ins-nom" value={iNom} onChange={(e) => setINom(e.target.value)} required placeholder="Nom" />
+                                </div>
+                            </div>
+                            <div className="field" style={{ marginBottom: 14 }}>
+                                <label htmlFor="ins-dn">Date de naissance</label>
+                                <input id="ins-dn" type="date" value={iDn} onChange={(e) => setIDn(e.target.value)} />
+                            </div>
+                            <div className="field" style={{ marginBottom: 14 }}>
+                                <label htmlFor="ins-societe">Nom de société (facultatif)</label>
+                                <input id="ins-societe" value={iSociete} onChange={(e) => setISociete(e.target.value)} placeholder="Si compte professionnel" />
+                            </div>
+                            <div className="field" style={{ marginBottom: 14 }}>
+                                <label htmlFor="ins-email">Email *</label>
+                                <input id="ins-email" type="email" value={iEmail} onChange={(e) => setIEmail(e.target.value)} required placeholder="vous@exemple.fr" />
+                            </div>
+                            <div className="field" style={{ marginBottom: 14 }}>
+                                <label htmlFor="ins-tel">Téléphone</label>
+                                <input id="ins-tel" type="tel" value={iTel} onChange={(e) => setITel(e.target.value)} placeholder="06 …" />
+                            </div>
+                            <div className="field" style={{ marginBottom: 18 }}>
+                                <label htmlFor="ins-msg">Votre projet (facultatif)</label>
+                                <input id="ins-msg" value={iMsg} onChange={(e) => setIMsg(e.target.value)} placeholder="Devis en cours, projet à venir…" />
+                            </div>
+                            <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center' }}>
+                                Envoyer ma demande
+                            </button>
+                        </form>
+                    )}
+                    <p style={{ marginTop: 16, fontSize: 14, textAlign: 'center' }}>
+                        <button className="btn-x" style={{ textDecoration: 'underline', fontWeight: 600, color: 'var(--ambre-fonce)' }} onClick={() => setInscription(false)}>
+                            ← J&rsquo;ai déjà un compte
+                        </button>
+                    </p>
+                    <p style={{ marginTop: 12, fontSize: 13 }}>
+                        <Link href="/" style={{ color: 'var(--taupe)', textDecoration: 'underline' }}>← Retour au site</Link>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     /* ——— Écran de connexion (plein écran, hors site) ——— */
     if (!connecte) {
         return (
@@ -143,64 +219,13 @@ export function PortalShell({
                     </div>
 
                     {/* — Création de compte : demande côté client, autorisation côté pro — */}
-                    {type === 'client' && !inscription && (
+                    {type === 'client' && (
                         <p style={{ marginTop: 16, fontSize: 14, textAlign: 'center' }}>
                             Pas encore de compte ?{' '}
                             <button className="btn-x" style={{ textDecoration: 'underline', fontWeight: 600, color: 'var(--ambre-fonce)' }} onClick={() => setInscription(true)}>
                                 Créer mon compte
                             </button>
                         </p>
-                    )}
-                    {type === 'client' && inscription && (
-                        <div style={{ marginTop: 18, borderTop: '1px solid var(--ligne)', paddingTop: 16 }}>
-                            {iEnvoyee ? (
-                                <div className="form-ok">
-                                    <b>Demande envoyée !</b> L&rsquo;équipe du magasin la rattache à votre dossier
-                                    et vous confirme l&rsquo;ouverture de votre accès par email.
-                                </div>
-                            ) : (
-                                <form onSubmit={demanderCompte}>
-                                    <h2 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 20, marginBottom: 4 }}>Créer mon compte</h2>
-                                    <p style={{ fontSize: 13, color: 'var(--taupe)', marginBottom: 14 }}>
-                                        Votre demande est vérifiée par le magasin puis rattachée à votre dossier client.
-                                    </p>
-                                    <div className="form-grid" style={{ marginBottom: 12, gap: 12 }}>
-                                        <div className="field">
-                                            <label htmlFor="ins-prenom">Prénom *</label>
-                                            <input id="ins-prenom" value={iPrenom} onChange={(e) => setIPrenom(e.target.value)} required placeholder="Prénom" />
-                                        </div>
-                                        <div className="field">
-                                            <label htmlFor="ins-nom">Nom *</label>
-                                            <input id="ins-nom" value={iNom} onChange={(e) => setINom(e.target.value)} required placeholder="Nom" />
-                                        </div>
-                                    </div>
-                                    <div className="field" style={{ marginBottom: 12 }}>
-                                        <label htmlFor="ins-dn">Date de naissance</label>
-                                        <input id="ins-dn" type="date" value={iDn} onChange={(e) => setIDn(e.target.value)} />
-                                    </div>
-                                    <div className="field" style={{ marginBottom: 12 }}>
-                                        <label htmlFor="ins-societe">Nom de société (facultatif)</label>
-                                        <input id="ins-societe" value={iSociete} onChange={(e) => setISociete(e.target.value)} placeholder="Si compte professionnel" />
-                                    </div>
-                                    <div className="field" style={{ marginBottom: 12 }}>
-                                        <label htmlFor="ins-email">Email *</label>
-                                        <input id="ins-email" type="email" value={iEmail} onChange={(e) => setIEmail(e.target.value)} required placeholder="vous@exemple.fr" />
-                                    </div>
-                                    <div className="field" style={{ marginBottom: 12 }}>
-                                        <label htmlFor="ins-tel">Téléphone</label>
-                                        <input id="ins-tel" type="tel" value={iTel} onChange={(e) => setITel(e.target.value)} placeholder="06 …" />
-                                    </div>
-                                    <div className="field" style={{ marginBottom: 14 }}>
-                                        <label htmlFor="ins-msg">Votre projet (facultatif)</label>
-                                        <input id="ins-msg" value={iMsg} onChange={(e) => setIMsg(e.target.value)} placeholder="Devis en cours, projet à venir…" />
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 10 }}>
-                                        <button type="submit" className="btn" style={{ flex: 1, justifyContent: 'center' }}>Envoyer ma demande</button>
-                                        <button type="button" className="btn-x" onClick={() => setInscription(false)}>Annuler</button>
-                                    </div>
-                                </form>
-                            )}
-                        </div>
                     )}
                     {type === 'pro' && (
                         <p style={{ marginTop: 16, fontSize: 13, color: 'var(--taupe)', textAlign: 'center' }}>

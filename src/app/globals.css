@@ -401,8 +401,9 @@ body::before {
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field.full { grid-column: 1 / -1; }
 .field label { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--taupe); }
+.form-grid > .field { min-width: 0; }
 .field input, .field select, .field textarea {
-    font: inherit; color: var(--encre);
+    font: inherit; color: var(--encre); min-width: 0; width: 100%;
     padding: 13px 16px; border-radius: 14px;
     border: 1px solid var(--ligne); background: var(--creme-2);
     transition: border-color .2s ease, box-shadow .2s ease;
