@@ -20,7 +20,7 @@ export type DevisStatut = 'Brouillon' | 'Envoyé' | 'Accepté' | 'Refusé' | 'Fa
 
 /** Signature électronique (bon pour accord / réception) — image PNG en dataURL. */
 export type Signature = { image: string; date: string };
-export type LigneDevis = { slug: string; nom: string; prix: number; surface: number };
+export type LigneDevis = { slug: string; ref?: string; nom: string; prix: number; surface: number };
 export type Devis = {
     id: string;
     client: string;
@@ -399,11 +399,20 @@ export const useProduitsPerso = () => useCollection<ProduitPerso[]>('dc-produits
    Le catalogue vit dans le code ; les réglages métier ajustables par l'équipe
    (prix de vente, seuils, conditionnement fournisseur) vivent ici et le
    surchargent. Firestore reprendra ces deux collections telles quelles. */
-export type ParamRef = { carreauxParPaquet?: number; seuil?: number };
+export type ParamRef = { carreauxParPaquet?: number; seuil?: number; prix?: number };
 export type ParamModele = { prix?: number; seuil?: number };
 
 export const prixEffectif = (p: Produit, pm: Record<string, ParamModele>) =>
     pm[p.slug]?.prix ?? p.prix;
+
+/** Prix d'une RÉFÉRENCE — cascade : prix de la réf → prix du modèle → catalogue.
+    (Le prix peut varier par couleur/format : option A validée.) */
+export const prixEffectifRef = (
+    v: { ref: string; produit: string },
+    p: Produit,
+    pr: Record<string, ParamRef>,
+    pm: Record<string, ParamModele>
+) => pr[v.ref]?.prix ?? pm[v.produit]?.prix ?? p.prix;
 
 export const seuilEffectif = (
     v: { ref: string; produit: string },

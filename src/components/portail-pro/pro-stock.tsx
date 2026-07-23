@@ -6,7 +6,7 @@ import { SearchBar } from '@/components/shared/search-bar';
 import {
     useStock, useReceptions, useParamRefs, useParamModeles, useProduitsPerso,
     produitsTous, slugifier, prochainIdReception,
-    stockDuModele, refsEnAlerte, seuilEffectif, prixEffectif,
+    stockDuModele, refsEnAlerte, seuilEffectif, prixEffectifRef,
     type LigneReception, type Reception, type ProduitPerso,
 } from '@/services/commerce';
 
@@ -35,6 +35,7 @@ export function ProStock() {
     const [editModele, setEditModele] = useState(false);
     const [pCrx, setPCrx] = useState('');
     const [pSeuilRef, setPSeuilRef] = useState('');
+    const [pPrixRef, setPPrixRef] = useState('');
     const [pPrix, setPPrix] = useState('');
     const [pSeuilModele, setPSeuilModele] = useState('');
 
@@ -426,8 +427,12 @@ export function ProStock() {
                         <div style={{ flex: 1, minWidth: 220 }}>
                             <h2>{sel.nom}</h2>
                             <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 4 }}>
-                                {getFamille(sel.famille)?.nom} · {prixEffectif(sel, paramModeles)} €/m² TTC
-                                {paramModeles[sel.slug]?.prix ? ' (personnalisé)' : ''} · {sel.finitions.join(' / ')}
+                                {getFamille(sel.famille)?.nom} · {(() => {
+                                    const prix = selVariantes.map((v) => prixEffectifRef(v, sel, paramRefs, paramModeles));
+                                    const min = Math.min(...prix); const max = Math.max(...prix);
+                                    return min === max ? `${min} €/m² TTC` : `de ${min} à ${max} €/m² TTC selon la référence`;
+                                })()}
+                                {paramModeles[sel.slug]?.prix ? ' (base personnalisée)' : ''} · {sel.finitions.join(' / ')}
                                 {sel.pei ? ` · PEI ${sel.pei}` : ''}{sel.glissance ? ` · ${sel.glissance}` : ''}
                             </p>
                             <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 6 }}>
@@ -510,7 +515,7 @@ export function ProStock() {
                     <div className="table-scroll" style={{ marginTop: 16 }}>
                         <table className="data-table">
                             <thead>
-                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Conditionnement</th><th>Seuil</th><th>Stock (m²)</th><th>État</th><th></th></tr>
+                                <tr><th>Réf.</th><th>Couleur</th><th>Format</th><th>Prix €/m²</th><th>Conditionnement</th><th>Seuil</th><th>Stock (m²)</th><th>État</th><th></th></tr>
                             </thead>
                             <tbody>
                                 {selVariantes.map((v) => {
@@ -524,6 +529,7 @@ export function ProStock() {
                                             <td style={{ fontWeight: 600 }}>{v.ref}</td>
                                             <td>{v.couleur}</td>
                                             <td>{v.format}</td>
+                                            <td>{prixEffectifRef(v, sel, paramRefs, paramModeles)}{paramRefs[v.ref]?.prix ? ' *' : ''}</td>
                                             <td>
                                                 {crxPerso && a
                                                     ? `${crxPerso} crx · ${Math.round(crxPerso * a * 100) / 100} m²/paquet (perso)`
@@ -545,6 +551,7 @@ export function ProStock() {
                                                         setEditRef(editRef === v.ref ? null : v.ref); setEditModele(false);
                                                         setPCrx(String(paramRefs[v.ref]?.carreauxParPaquet ?? c?.carreaux ?? ''));
                                                         setPSeuilRef(String(paramRefs[v.ref]?.seuil ?? ''));
+                                                        setPPrixRef(String(paramRefs[v.ref]?.prix ?? ''));
                                                     }}
                                                 >
                                                     ⚙
@@ -574,17 +581,23 @@ export function ProStock() {
                                     <label htmlFor="pr-seuil">Seuil de réappro spécifique (m²)</label>
                                     <input id="pr-seuil" type="number" min="0" step="5" value={pSeuilRef} onChange={(e) => setPSeuilRef(e.target.value)} placeholder="hérite du modèle" />
                                 </div>
+                                <div className="field" style={{ width: 190 }}>
+                                    <label htmlFor="pr-prix">Prix €/m² spécifique</label>
+                                    <input id="pr-prix" type="number" min="0" step="0.5" value={pPrixRef} onChange={(e) => setPPrixRef(e.target.value)} placeholder="hérite du modèle" />
+                                </div>
                                 <button
                                     className="btn"
                                     onClick={() => {
                                         const crx = Math.floor(parseFloat(pCrx.replace(',', '.')));
                                         const seuil = parseFloat(pSeuilRef.replace(',', '.'));
+                                        const prixRef = parseFloat(pPrixRef.replace(',', '.'));
                                         const std = conditionnement(trouverVariante(editRef)!.format)?.carreaux;
                                         setParamRefs({
                                             ...paramRefs,
                                             [editRef]: {
                                                 ...(crx > 0 && crx !== std ? { carreauxParPaquet: crx } : {}),
                                                 ...(seuil > 0 ? { seuil } : {}),
+                                                ...(prixRef > 0 ? { prix: prixRef } : {}),
                                             },
                                         });
                                         setEditRef(null);
@@ -605,8 +618,9 @@ export function ProStock() {
                                 </button>
                             </div>
                             <p style={{ fontSize: 12, color: 'var(--taupe)', marginTop: 10 }}>
-                                Ces réglages priment sur ceux du modèle pour cette référence uniquement
-                                (le conditionnement pré-remplit les réceptions de BL, le seuil pilote l&rsquo;alerte réappro).
+                                Ces réglages priment sur ceux du modèle pour cette référence uniquement :
+                                conditionnement (pré-remplit les BL), seuil (alerte réappro) et prix
+                                (appliqué aux nouvelles lignes de devis de cette référence).
                             </p>
                         </div>
                     )}

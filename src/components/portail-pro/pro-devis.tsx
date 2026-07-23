@@ -7,9 +7,10 @@ import { StatusDropdown } from '@/components/shared/dropdown';
 import { SearchBar } from '@/components/shared/search-bar';
 import { MessageComposer } from '@/components/shared/message-composer';
 import { SignatureModal } from '@/components/shared/signature-modal';
+import { variantesDeProduit } from '@/lib/catalogue';
 import {
-    useDevis, useFactures, useClients, useParamModeles, useProduitsPerso, produitsTous,
-    factureDepuisDevis, prochainIdDevis, totalDevis, horodatage, prixEffectif,
+    useDevis, useFactures, useClients, useParamModeles, useParamRefs, useProduitsPerso,
+    produitsTous, factureDepuisDevis, prochainIdDevis, totalDevis, horodatage, prixEffectifRef,
     DEVIS_STATUTS_MANUELS, type Devis, type DevisStatut, type LigneDevis,
 } from '@/services/commerce';
 import { exporterDevisPdf } from '@/services/document-pdf';
@@ -30,6 +31,7 @@ export function ProDevis() {
     const [factures, setFactures] = useFactures();
     const [clients] = useClients();
     const [paramModeles] = useParamModeles();
+    const [paramRefs] = useParamRefs();
     /* Catalogue complet : produits du site + produits ajoutés (rubrique Stock). */
     const [produitsPerso] = useProduitsPerso();
     const CATALOGUE = produitsTous(produitsPerso);
@@ -67,14 +69,32 @@ export function ProDevis() {
     const [fNotes, setFNotes] = useState('');
     const [fLignes, setFLignes] = useState<LigneDevis[]>([]);
     const [fProduit, setFProduit] = useState(CATALOGUE[0].slug);
+    const fProduitObj = CATALOGUE.find((x) => x.slug === fProduit) ?? CATALOGUE[0];
+    const fVariantes = variantesDeProduit(fProduitObj);
+    const [fRef, setFRef] = useState(fVariantes[0]?.ref ?? '');
     const [fSurface, setFSurface] = useState('');
 
+    const changerProduit = (slug: string) => {
+        setFProduit(slug);
+        const p = CATALOGUE.find((x) => x.slug === slug) ?? CATALOGUE[0];
+        setFRef(variantesDeProduit(p)[0]?.ref ?? '');
+    };
+
+    /* Le devis se compose PAR RÉFÉRENCE : le prix suit la cascade
+       réf → modèle → catalogue (option A). */
+    const fVarianteSel = fVariantes.find((v) => v.ref === fRef) ?? fVariantes[0];
+    const fPrixLigne = fVarianteSel ? prixEffectifRef(fVarianteSel, fProduitObj, paramRefs, paramModeles) : 0;
+
     const ajouterLigne = () => {
-        const p = CATALOGUE.find((x) => x.slug === fProduit)!;
         const s = parseFloat(fSurface.replace(',', '.'));
-        if (!s || s <= 0) return;
-        /* Prix effectif : paramétrage du modèle (rubrique Stock) sinon catalogue. */
-        setFLignes([...fLignes, { slug: p.slug, nom: p.nom, prix: prixEffectif(p, paramModeles), surface: s }]);
+        if (!s || s <= 0 || !fVarianteSel) return;
+        setFLignes([...fLignes, {
+            slug: fProduitObj.slug,
+            ref: fVarianteSel.ref,
+            nom: `${fProduitObj.nom} · ${fVarianteSel.couleur} · ${fVarianteSel.format}`,
+            prix: fPrixLigne,
+            surface: s,
+        }]);
         setFSurface('');
     };
 
@@ -152,11 +172,21 @@ export function ProDevis() {
 
                         <h3 style={{ fontSize: 14, fontWeight: 700, margin: '20px 0 8px', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--taupe)' }}>Lignes</h3>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                            <div className="field" style={{ flex: 2, minWidth: 220 }}>
-                                <label htmlFor="nd-prod">Référence (catalogue)</label>
-                                <select id="nd-prod" value={fProduit} onChange={(e) => setFProduit(e.target.value)}>
+                            <div className="field" style={{ flex: 2, minWidth: 190 }}>
+                                <label htmlFor="nd-prod">Modèle</label>
+                                <select id="nd-prod" value={fProduit} onChange={(e) => changerProduit(e.target.value)}>
                                     {CATALOGUE.map((p) => (
-                                        <option key={p.slug} value={p.slug}>{p.nom} — {prixEffectif(p, paramModeles)} €/m²</option>
+                                        <option key={p.slug} value={p.slug}>{p.nom}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="field" style={{ flex: 2, minWidth: 220 }}>
+                                <label htmlFor="nd-ref">Référence (couleur · format)</label>
+                                <select id="nd-ref" value={fRef} onChange={(e) => setFRef(e.target.value)}>
+                                    {fVariantes.map((v) => (
+                                        <option key={v.ref} value={v.ref}>
+                                            {v.couleur} · {v.format} — {prixEffectifRef(v, fProduitObj, paramRefs, paramModeles)} €/m²
+                                        </option>
                                     ))}
                                 </select>
                             </div>
