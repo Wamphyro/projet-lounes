@@ -47,12 +47,8 @@ export type Compte = {
     statut: 'Actif' | 'Désactivé';
 };
 
-export const PLANS: { plan: PlanMagasin; prix: number }[] = [
-    { plan: 'Essai', prix: 0 },
-    { plan: 'Standard', prix: 149 },
-    { plan: 'Premium', prix: 249 },
-];
-export const prixPlan = (p: PlanMagasin) => PLANS.find((x) => x.plan === p)?.prix ?? 0;
+/* Plans d'abonnement — sans tarification pour l'instant (à définir plus tard). */
+export const PLANS: PlanMagasin[] = ['Essai', 'Standard', 'Premium'];
 
 const MAGASINS_SEED: Magasin[] = [
     { id: 'MAG-01', nom: 'DEKA CERAM', ville: 'Thorey-en-Plaine (21)', plan: 'Premium', statut: 'Actif', depuis: '02/07/2026', contact: 'Lounès Dekkiche', email: 'pro@dekaceram.fr' },

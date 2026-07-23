@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import {
-    useMagasins, useComptes, useInvitations, prixPlan,
+    useMagasins, useComptes, useInvitations,
     type PlanMagasin,
 } from '@/services/provider';
 
@@ -50,7 +50,7 @@ export function ProviderMagasins() {
                             <div>
                                 <h2>{sel.nom}</h2>
                                 <p style={{ fontSize: 13, color: 'var(--taupe)', marginTop: 4 }}>
-                                    {sel.id} · abonné depuis le {sel.depuis} · {prixPlan(sel.plan)} €/mois
+                                    {sel.id} · abonné depuis le {sel.depuis}
                                 </p>
                             </div>
                             <StatusDropdown

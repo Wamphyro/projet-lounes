@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMagasins, useInvitations, useComptes, prixPlan } from '@/services/provider';
+import { useMagasins, useInvitations, useComptes } from '@/services/provider';
 
 /** Tableau de bord provider — l'activité de l'éditeur du logiciel. */
 export function ProviderDashboard() {
@@ -10,7 +10,7 @@ export function ProviderDashboard() {
     const [comptes] = useComptes();
 
     const actifs = magasins.filter((m) => m.statut === 'Actif');
-    const mrr = actifs.reduce((t, m) => t + prixPlan(m.plan), 0);
+    const enEssai = magasins.filter((m) => m.plan === 'Essai');
     const enAttente = invitations.filter((i) => i.statut === 'En attente');
 
     return (
@@ -25,7 +25,7 @@ export function ProviderDashboard() {
 
             <div className="tiles">
                 <div className="tile"><div className="val">{actifs.length}</div><div className="lbl">Magasins actifs</div></div>
-                <div className="tile"><div className="val">{mrr.toLocaleString('fr-FR')} €</div><div className="lbl">Abonnements / mois</div></div>
+                <div className="tile"><div className="val">{enEssai.length}</div><div className="lbl">Magasins en essai</div></div>
                 <div className="tile"><div className="val">{enAttente.length}</div><div className="lbl">Autorisations en attente</div></div>
                 <div className="tile"><div className="val">{comptes.filter((c) => c.statut === 'Actif').length}</div><div className="lbl">Comptes actifs</div></div>
             </div>
