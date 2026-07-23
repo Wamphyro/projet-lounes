@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { PRODUITS } from '@/lib/catalogue';
 import {
     useDevis, useCommandes, useDemandes, useStock, useParamRefs, useParamModeles,
-    totalDevis, refsEnAlerte,
+    useProduitsPerso, produitsTous, totalDevis, refsEnAlerte,
 } from '@/services/commerce';
 
 /** Tableau de bord équipe — indicateurs + activité récente. */
@@ -15,11 +14,13 @@ export function ProDashboard() {
     const [stock] = useStock();
     const [paramRefs] = useParamRefs();
     const [paramModeles] = useParamModeles();
+    const [produitsPerso] = useProduitsPerso();
+    const CATALOGUE = produitsTous(produitsPerso);
 
     const enCours = commandes.filter((c) => c.statut !== 'Livrée');
     const devisOuverts = devis.filter((d) => d.statut === 'Brouillon' || d.statut === 'Envoyé');
     const aTraiter = demandes.filter((d) => !d.traitee);
-    const sousSeuil = PRODUITS.filter((p) => refsEnAlerte(stock, p, paramRefs, paramModeles).length > 0);
+    const sousSeuil = CATALOGUE.filter((p) => refsEnAlerte(stock, p, paramRefs, paramModeles).length > 0);
 
     return (
         <>

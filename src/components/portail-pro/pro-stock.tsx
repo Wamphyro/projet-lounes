@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { PRODUITS, getFamille, variantesDeProduit, getVariante, conditionnement, aireCarreau } from '@/lib/catalogue';
+import { FAMILLES, getFamille, variantesDeProduit, conditionnement, aireCarreau } from '@/lib/catalogue';
 import { SearchBar } from '@/components/shared/search-bar';
 import {
-    useStock, useReceptions, useParamRefs, useParamModeles, prochainIdReception,
+    useStock, useReceptions, useParamRefs, useParamModeles, useProduitsPerso,
+    produitsTous, slugifier, prochainIdReception,
     stockDuModele, refsEnAlerte, seuilEffectif, prixEffectif,
-    type LigneReception, type Reception,
+    type LigneReception, type Reception, type ProduitPerso,
 } from '@/services/commerce';
 
 /**
@@ -21,6 +22,14 @@ export function ProStock() {
     const [paramRefs, setParamRefs] = useParamRefs();
     const [paramModeles, setParamModeles] = useParamModeles();
 
+    /* Catalogue complet côté gestion : produits du site + produits AJOUTÉS
+       par l'équipe (créés avant réception, refs générées automatiquement). */
+    const [produitsPerso, setProduitsPerso] = useProduitsPerso();
+    const CATALOGUE = produitsTous(produitsPerso);
+    const TOUTES = CATALOGUE.flatMap(variantesDeProduit);
+    const trouverVariante = (ref: string) => TOUTES.find((v) => v.ref === ref);
+    const estAjoute = (slug: string) => produitsPerso.some((x) => x.slug === slug);
+
     /* Paramétrage en cours d'édition (référence ou modèle) */
     const [editRef, setEditRef] = useState<string | null>(null);
     const [editModele, setEditModele] = useState(false);
@@ -29,30 +38,57 @@ export function ProStock() {
     const [pPrix, setPPrix] = useState('');
     const [pSeuilModele, setPSeuilModele] = useState('');
 
-    const [selSlug, setSelSlug] = useState<string>(PRODUITS[0].slug);
+    const [selSlug, setSelSlug] = useState<string>(CATALOGUE[0].slug);
     const [recherche, setRecherche] = useState('');
 
     const modelesVisibles = recherche
-        ? PRODUITS.filter((p) =>
+        ? CATALOGUE.filter((p) =>
             `${p.nom} ${getFamille(p.famille)?.nom} ${variantesDeProduit(p).map((v) => `${v.ref} ${v.couleur} ${v.format}`).join(' ')}`
                 .toLowerCase().includes(recherche.toLowerCase()))
-        : PRODUITS;
+        : CATALOGUE;
 
-    const sel = PRODUITS.find((p) => p.slug === selSlug) ?? modelesVisibles[0] ?? PRODUITS[0];
+    const sel = CATALOGUE.find((p) => p.slug === selSlug) ?? modelesVisibles[0] ?? CATALOGUE[0];
     const selVariantes = variantesDeProduit(sel);
 
-    const [panneau, setPanneau] = useState<'ferme' | 'manuel' | 'ia'>('ferme');
+    const [panneau, setPanneau] = useState<'ferme' | 'manuel' | 'ia' | 'produit'>('ferme');
     const [confirmation, setConfirmation] = useState<string | null>(null);
 
-    const modelesEnAlerte = PRODUITS.filter((p) => refsEnAlerte(stock, p, paramRefs, paramModeles).length > 0).length;
-    const totalRefs = PRODUITS.reduce((t, p) => t + variantesDeProduit(p).length, 0);
+    /* — Formulaire « nouveau produit au catalogue » — */
+    const [fpNom, setFpNom] = useState('');
+    const [fpFamille, setFpFamille] = useState(FAMILLES[0].slug);
+    const [fpPrix, setFpPrix] = useState('');
+    const [fpFormats, setFpFormats] = useState('');
+    const [fpCouleurs, setFpCouleurs] = useState('');
+    const [fpFinitions, setFpFinitions] = useState('');
+
+    const creerProduit = () => {
+        const liste = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
+        const formats = liste(fpFormats);
+        const couleurs = liste(fpCouleurs);
+        const prix = parseFloat(fpPrix.replace(',', '.'));
+        if (!fpNom.trim() || !prix || formats.length === 0 || couleurs.length === 0) return;
+        let slug = slugifier(fpNom);
+        while (CATALOGUE.some((p) => p.slug === slug)) slug = `${slug}-2`;
+        const prod: ProduitPerso = {
+            slug, nom: fpNom.trim(), famille: fpFamille, prix,
+            formats, couleurs, finitions: liste(fpFinitions),
+        };
+        setProduitsPerso([...produitsPerso, prod]);
+        setConfirmation(`Produit ajouté ! « ${prod.nom} » — ${formats.length * couleurs.length} référence${formats.length * couleurs.length > 1 ? 's' : ''} générée${formats.length * couleurs.length > 1 ? 's' : ''} (couleur × format), stock à 0 en attente de BL.`);
+        setSelSlug(slug);
+        setPanneau('ferme');
+        setFpNom(''); setFpPrix(''); setFpFormats(''); setFpCouleurs(''); setFpFinitions('');
+    };
+
+    const modelesEnAlerte = CATALOGUE.filter((p) => refsEnAlerte(stock, p, paramRefs, paramModeles).length > 0).length;
+    const totalRefs = CATALOGUE.reduce((t, p) => t + variantesDeProduit(p).length, 0);
 
     /* — Formulaire BL manuel (par référence, en paquets + prix d'achat) — */
     const [fBl, setFBl] = useState('');
     const [fFour, setFFour] = useState('');
     const [fLignes, setFLignes] = useState<LigneReception[]>([]);
-    const [fModele, setFModele] = useState(PRODUITS[0].slug);
-    const fModeleVariantes = variantesDeProduit(PRODUITS.find((p) => p.slug === fModele)!);
+    const [fModele, setFModele] = useState(CATALOGUE[0].slug);
+    const fModeleVariantes = variantesDeProduit(CATALOGUE.find((p) => p.slug === fModele) ?? CATALOGUE[0]);
     const [fRef, setFRef] = useState(fModeleVariantes[0].ref);
     const [fPaquets, setFPaquets] = useState('');
     const [fCarreaux, setFCarreaux] = useState(String(conditionnement(fModeleVariantes[0].format)?.carreaux ?? ''));
@@ -60,13 +96,13 @@ export function ProStock() {
     const [fPrix, setFPrix] = useState('');
     const [fUnite, setFUnite] = useState<'m2' | 'paquet'>('m2');
 
-    const vSel = getVariante(fRef)!;
+    const vSel = trouverVariante(fRef) ?? TOUTES[0];
     const aire = aireCarreau(vSel.format);
     const suggestion = conditionnement(vSel.format);
 
     const changerRef = (ref: string) => {
         setFRef(ref);
-        const v = getVariante(ref)!;
+        const v = trouverVariante(ref)!;
         /* Conditionnement paramétré sur la référence, sinon suggestion standard. */
         setFCarreaux(String(paramRefs[ref]?.carreauxParPaquet ?? conditionnement(v.format)?.carreaux ?? ''));
         setFPaquets(''); setFQteM2(''); setFUnite('m2');
@@ -74,7 +110,7 @@ export function ProStock() {
 
     const changerModele = (slug: string) => {
         setFModele(slug);
-        changerRef(variantesDeProduit(PRODUITS.find((p) => p.slug === slug)!)[0].ref);
+        changerRef(variantesDeProduit(CATALOGUE.find((p) => p.slug === slug)!)[0].ref);
     };
 
     /* Conditionnement CHOISI : carreaux/paquet modifiable (varie par fournisseur),
@@ -88,7 +124,7 @@ export function ProStock() {
 
     const ajouterLigne = () => {
         if (ligneM2 <= 0 || lignePrixM2 <= 0) return;
-        const p = PRODUITS.find((x) => x.slug === vSel.produit)!;
+        const p = CATALOGUE.find((x) => x.slug === vSel.produit)!;
         const ligne: LigneReception = {
             ref: fRef,
             nom: `${p.nom} · ${vSel.couleur} · ${vSel.format}`,
@@ -116,7 +152,7 @@ export function ProStock() {
             lignes: fLignes,
         };
         setReceptions([rec, ...receptions]);
-        setConfirmation(`${rec.id} enregistrée — ${fLignes.reduce((t, l) => t + l.quantite, 0)} m² ajoutés sur ${fLignes.length} référence${fLignes.length > 1 ? 's' : ''}.`);
+        setConfirmation(`Réception validée ! ${rec.id} enregistrée — ${fLignes.reduce((t, l) => t + l.quantite, 0)} m² ajoutés sur ${fLignes.length} référence${fLignes.length > 1 ? 's' : ''}.`);
         setFBl(''); setFFour(''); setFLignes([]); setPanneau('ferme');
     };
 
@@ -130,12 +166,15 @@ export function ProStock() {
                 <div>
                     <h1 className="portal-title">Stock</h1>
                     <p className="portal-sub">
-                        {PRODUITS.length} modèles · {totalRefs} références (couleur × format) · {modelesEnAlerte} modèle{modelesEnAlerte > 1 ? 's' : ''} avec réappro conseillée.
+                        {CATALOGUE.length} modèles · {totalRefs} références (couleur × format) · {modelesEnAlerte} modèle{modelesEnAlerte > 1 ? 's' : ''} avec réappro conseillée.
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button className="btn" onClick={() => { setPanneau(panneau === 'manuel' ? 'ferme' : 'manuel'); setConfirmation(null); }}>
                         + Réceptionner un BL
+                    </button>
+                    <button className="btn dark" onClick={() => { setPanneau(panneau === 'produit' ? 'ferme' : 'produit'); setConfirmation(null); }}>
+                        + Produit au catalogue
                     </button>
                     <button className="btn dark" onClick={() => { setPanneau(panneau === 'ia' ? 'ferme' : 'ia'); setConfirmation(null); }}>
                         Analyser un BL (IA) <span className="pill warn" style={{ marginLeft: 6 }}>Bientôt</span>
@@ -143,7 +182,7 @@ export function ProStock() {
                 </div>
             </div>
 
-            {confirmation && <div className="form-ok" style={{ marginBottom: 20 }}><b>Réception validée !</b> {confirmation}</div>}
+            {confirmation && <div className="form-ok" style={{ marginBottom: 20 }}>{confirmation}</div>}
 
             {/* ——— Analyse IA (option affichée, branchée plus tard) ——— */}
             {panneau === 'ia' && (
@@ -162,6 +201,68 @@ export function ProStock() {
                     </label>
                     <div style={{ marginTop: 18 }}>
                         <button className="btn" onClick={() => setPanneau('manuel')}>Passer en saisie manuelle</button>
+                    </div>
+                </div>
+            )}
+
+            {/* ——— Nouveau produit au catalogue (avant tout BL) ——— */}
+            {panneau === 'produit' && (
+                <div className="md-detail" style={{ marginBottom: 22 }}>
+                    <h2>Ajouter un produit au catalogue</h2>
+                    <p style={{ fontSize: 14, color: 'var(--taupe)', margin: '8px 0 16px', maxWidth: 680 }}>
+                        Créez le produit et ses références <b>avant</b> la première réception : les références
+                        (une par couleur × format) sont générées automatiquement, stock à zéro en attente de BL.
+                    </p>
+
+                    {/* Import de catalogue fournisseur — lecture IA à brancher */}
+                    <label className="dropzone disabled" style={{ maxWidth: 640, marginBottom: 18 }}>
+                        <input type="file" accept=".csv,.xlsx,.xls,.pdf,.jpg,.jpeg,.png" disabled />
+                        <span className="dz-ico" aria-hidden="true">⇪</span>
+                        <span className="dz-main">Importer un catalogue fournisseur (CSV, Excel, PDF, photo…) <span className="pill warn" style={{ marginLeft: 6 }}>Bientôt</span></span>
+                        <span className="dz-sub">L&rsquo;IA lira le fichier quel que soit son format et créera les produits et références — comme pour les BL</span>
+                    </label>
+
+                    <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--taupe)' }}>
+                        Ou saisie manuelle
+                    </h3>
+                    <div className="form-grid">
+                        <div className="field">
+                            <label htmlFor="fp-nom">Nom du produit *</label>
+                            <input id="fp-nom" value={fpNom} onChange={(e) => setFpNom(e.target.value)} placeholder="Ex. Grès Nuage de Loire" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="fp-famille">Famille</label>
+                            <select id="fp-famille" value={fpFamille} onChange={(e) => setFpFamille(e.target.value)}>
+                                {FAMILLES.map((f) => <option key={f.slug} value={f.slug}>{f.nom}</option>)}
+                            </select>
+                        </div>
+                        <div className="field">
+                            <label htmlFor="fp-prix">Prix de vente €/m² TTC *</label>
+                            <input id="fp-prix" type="number" min="0" step="0.5" value={fpPrix} onChange={(e) => setFpPrix(e.target.value)} />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="fp-finitions">Finitions (séparées par des virgules)</label>
+                            <input id="fp-finitions" value={fpFinitions} onChange={(e) => setFpFinitions(e.target.value)} placeholder="Mat, Poli" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="fp-formats">Formats * (séparés par des virgules)</label>
+                            <input id="fp-formats" value={fpFormats} onChange={(e) => setFpFormats(e.target.value)} placeholder="60×60, 120×120" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="fp-couleurs">Couleurs * (séparées par des virgules)</label>
+                            <input id="fp-couleurs" value={fpCouleurs} onChange={(e) => setFpCouleurs(e.target.value)} placeholder="Blanc, Gris perle" />
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button className="btn" onClick={creerProduit} disabled={!fpNom.trim() || !fpPrix || !fpFormats.trim() || !fpCouleurs.trim()}>
+                            Créer le produit et ses références
+                        </button>
+                        <button className="btn-x" onClick={() => setPanneau('ferme')}>Annuler</button>
+                        {fpFormats.trim() && fpCouleurs.trim() && (
+                            <span style={{ fontSize: 13, color: 'var(--taupe)' }}>
+                                → {fpFormats.split(',').filter((x) => x.trim()).length * fpCouleurs.split(',').filter((x) => x.trim()).length} référence(s) seront générées
+                            </span>
+                        )}
                     </div>
                 </div>
             )}
@@ -188,7 +289,7 @@ export function ProStock() {
                         <div className="field" style={{ flex: 2, minWidth: 190 }}>
                             <label htmlFor="bl-modele">Modèle</label>
                             <select id="bl-modele" value={fModele} onChange={(e) => changerModele(e.target.value)}>
-                                {PRODUITS.map((p) => <option key={p.slug} value={p.slug}>{p.nom}</option>)}
+                                {CATALOGUE.map((p) => <option key={p.slug} value={p.slug}>{p.nom}</option>)}
                             </select>
                         </div>
                         <div className="field" style={{ flex: 2, minWidth: 210 }}>
@@ -293,7 +394,7 @@ export function ProStock() {
                 value={recherche}
                 onChange={setRecherche}
                 placeholder="Modèle, famille, référence, couleur, format…"
-                total={PRODUITS.length}
+                total={CATALOGUE.length}
                 trouves={modelesVisibles.length}
             />
             <div className="md">
@@ -309,7 +410,9 @@ export function ProStock() {
                                         : alertes > 0 ? <span className="pill warn">{alertes} réf. en alerte</span>
                                         : <span className="pill ok">OK</span>}
                                 </span>
-                                <span className="l2">{getFamille(p.famille)?.nom} · {variantesDeProduit(p).length} références · {total} m² au total</span>
+                                <span className="l2">
+                                    {getFamille(p.famille)?.nom}{estAjoute(p.slug) ? ' · ajouté' : ''} · {variantesDeProduit(p).length} références · {total} m² au total
+                                </span>
                             </button>
                         );
                     })}
@@ -383,6 +486,19 @@ export function ProStock() {
                                 >
                                     Réinitialiser (catalogue)
                                 </button>
+                                {estAjoute(sel.slug) && (
+                                    <button
+                                        className="btn-x"
+                                        style={{ color: '#a33' }}
+                                        onClick={() => {
+                                            setProduitsPerso(produitsPerso.filter((x) => x.slug !== sel.slug));
+                                            setEditModele(false);
+                                            setSelSlug('calacatta-oro');
+                                        }}
+                                    >
+                                        Supprimer ce produit ajouté
+                                    </button>
+                                )}
                             </div>
                             <p style={{ fontSize: 12, color: 'var(--taupe)', marginTop: 10 }}>
                                 Ces réglages s&rsquo;appliquent au modèle entier (le prix sert aux nouveaux devis,
@@ -448,7 +564,7 @@ export function ProStock() {
                                 Paramétrer la référence {editRef}
                             </h3>
                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                                {aireCarreau(getVariante(editRef)?.format ?? '') && (
+                                {aireCarreau(trouverVariante(editRef)?.format ?? '') && (
                                     <div className="field" style={{ width: 190 }}>
                                         <label htmlFor="pr-crx">Carreaux / paquet (fournisseur)</label>
                                         <input id="pr-crx" type="number" min="1" step="1" value={pCrx} onChange={(e) => setPCrx(e.target.value)} />
@@ -463,7 +579,7 @@ export function ProStock() {
                                     onClick={() => {
                                         const crx = Math.floor(parseFloat(pCrx.replace(',', '.')));
                                         const seuil = parseFloat(pSeuilRef.replace(',', '.'));
-                                        const std = conditionnement(getVariante(editRef)!.format)?.carreaux;
+                                        const std = conditionnement(trouverVariante(editRef)!.format)?.carreaux;
                                         setParamRefs({
                                             ...paramRefs,
                                             [editRef]: {

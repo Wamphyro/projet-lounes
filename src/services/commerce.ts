@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TOUTES_VARIANTES, variantesDeProduit, type Produit } from '@/lib/catalogue';
+import { PRODUITS, TOUTES_VARIANTES, variantesDeProduit, type Produit } from '@/lib/catalogue';
 
 /**
  * Store COMMERCE partagé — devis, commandes, stock, demandes.
@@ -302,6 +302,45 @@ export const STOCK_INITIAL: Record<string, number> = Object.fromEntries(
     TOUTES_VARIANTES.map((v) => [v.ref, seedQty(v.ref)])
 );
 export const SEUIL_STOCK = 30; // seuil de réappro PAR RÉFÉRENCE (m²)
+
+/* ——— Catalogue interne (produits ajoutés par l'équipe) ———
+   Les produits du site vivent dans lib/catalogue.ts (SSOT). L'équipe peut en
+   AJOUTER ici pour la gestion (stock, BL, devis) AVANT toute réception :
+   les références (couleur × format) sont générées automatiquement.
+   À terme : import de fichiers catalogue fournisseurs (CSV, Excel, PDF…)
+   lus par l'IA, comme les BL. */
+export type ProduitPerso = {
+    slug: string;
+    nom: string;
+    famille: string;
+    prix: number;
+    formats: string[];
+    couleurs: string[];
+    finitions: string[];
+};
+
+export const slugifier = (nom: string) =>
+    nom.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+export const persoVersProduit = (p: ProduitPerso): Produit => ({
+    slug: p.slug,
+    nom: p.nom,
+    famille: p.famille,
+    accroche: 'Produit ajouté au catalogue interne (gestion).',
+    formats: p.formats,
+    finitions: p.finitions.length ? p.finitions : ['Standard'],
+    couleurs: p.couleurs,
+    pieces: [],
+    prix: p.prix,
+    texture: 'mat-pierre',
+});
+
+/** Catalogue complet côté gestion : produits du site + produits ajoutés. */
+export const produitsTous = (perso: ProduitPerso[]): Produit[] =>
+    [...PRODUITS, ...perso.map(persoVersProduit)];
+
+export const useProduitsPerso = () => useCollection<ProduitPerso[]>('dc-produits-perso', []);
 
 /* ——— Paramétrage (surcouche locale du catalogue SSOT) ———
    Le catalogue vit dans le code ; les réglages métier ajustables par l'équipe

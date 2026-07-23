@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { PRODUITS } from '@/lib/catalogue';
 import { StatusDropdown } from '@/components/shared/dropdown';
 import { SearchBar } from '@/components/shared/search-bar';
 import { MessageComposer } from '@/components/shared/message-composer';
 import { SignatureModal } from '@/components/shared/signature-modal';
 import {
-    useDevis, useFactures, useClients, useParamModeles, factureDepuisDevis,
-    prochainIdDevis, totalDevis, horodatage, prixEffectif,
+    useDevis, useFactures, useClients, useParamModeles, useProduitsPerso, produitsTous,
+    factureDepuisDevis, prochainIdDevis, totalDevis, horodatage, prixEffectif,
     DEVIS_STATUTS_MANUELS, type Devis, type DevisStatut, type LigneDevis,
 } from '@/services/commerce';
 import { exporterDevisPdf } from '@/services/document-pdf';
@@ -31,6 +30,9 @@ export function ProDevis() {
     const [factures, setFactures] = useFactures();
     const [clients] = useClients();
     const [paramModeles] = useParamModeles();
+    /* Catalogue complet : produits du site + produits ajoutés (rubrique Stock). */
+    const [produitsPerso] = useProduitsPerso();
+    const CATALOGUE = produitsTous(produitsPerso);
     const [composer, setComposer] = useState(false);
     const [signer, setSigner] = useState(false);
     const [selId, setSelId] = useState<string | null>(null);
@@ -64,11 +66,11 @@ export function ProDevis() {
     const [fRemise, setFRemise] = useState('0');
     const [fNotes, setFNotes] = useState('');
     const [fLignes, setFLignes] = useState<LigneDevis[]>([]);
-    const [fProduit, setFProduit] = useState(PRODUITS[0].slug);
+    const [fProduit, setFProduit] = useState(CATALOGUE[0].slug);
     const [fSurface, setFSurface] = useState('');
 
     const ajouterLigne = () => {
-        const p = PRODUITS.find((x) => x.slug === fProduit)!;
+        const p = CATALOGUE.find((x) => x.slug === fProduit)!;
         const s = parseFloat(fSurface.replace(',', '.'));
         if (!s || s <= 0) return;
         /* Prix effectif : paramétrage du modèle (rubrique Stock) sinon catalogue. */
@@ -153,7 +155,7 @@ export function ProDevis() {
                             <div className="field" style={{ flex: 2, minWidth: 220 }}>
                                 <label htmlFor="nd-prod">Référence (catalogue)</label>
                                 <select id="nd-prod" value={fProduit} onChange={(e) => setFProduit(e.target.value)}>
-                                    {PRODUITS.map((p) => (
+                                    {CATALOGUE.map((p) => (
                                         <option key={p.slug} value={p.slug}>{p.nom} — {prixEffectif(p, paramModeles)} €/m²</option>
                                     ))}
                                 </select>
