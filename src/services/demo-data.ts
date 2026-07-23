@@ -6,6 +6,7 @@
 
 export const DEMO_PRO = { user: 'pro@dekaceram.fr', pass: 'demo2026' };
 export const DEMO_CLIENT = { user: 'client@demo.fr', pass: 'demo2026' };
+export const DEMO_PROVIDER = { user: 'provider@dekaceram.fr', pass: 'demo2026' };
 
 export const ECHANTILLONS_CLIENT = [
     { nom: 'Zellige Blanc Neige', depuis: '15/07/2026', retour: 'avant le 29/07/2026' },

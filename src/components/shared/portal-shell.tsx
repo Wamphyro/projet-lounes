@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Monogram } from '@/components/shared/logo';
-import { DEMO_PRO, DEMO_CLIENT } from '@/services/demo-data';
+import { DEMO_PRO, DEMO_CLIENT, DEMO_PROVIDER } from '@/services/demo-data';
 
 /**
  * Shell applicatif des portails (équipe / client) — à l'image du portail
@@ -21,13 +21,13 @@ export function PortalShell({
     links,
     children,
 }: {
-    type: 'pro' | 'client';
+    type: 'pro' | 'client' | 'provider';
     titre: string;
     links: PortalLink[];
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    const compte = type === 'pro' ? DEMO_PRO : DEMO_CLIENT;
+    const compte = type === 'pro' ? DEMO_PRO : type === 'provider' ? DEMO_PROVIDER : DEMO_CLIENT;
     const storageKey = `dc-session-${type}`;
 
     const [connecte, setConnecte] = useState<boolean | null>(null);
@@ -66,7 +66,9 @@ export function PortalShell({
                     <p style={{ fontSize: 14, color: 'var(--taupe)', marginBottom: 20 }}>
                         {type === 'pro'
                             ? 'Accès réservé au personnel DEKA CERAM.'
-                            : 'Retrouvez votre suivi avec l’email utilisé lors de votre commande ou devis.'}
+                            : type === 'provider'
+                                ? 'Console d’administration du logiciel — réservée à l’éditeur.'
+                                : 'Retrouvez votre suivi avec l’email utilisé lors de votre commande ou devis.'}
                     </p>
                     <form onSubmit={login}>
                         <div className="field" style={{ marginBottom: 14 }}>
@@ -86,6 +88,17 @@ export function PortalShell({
                             Se connecter
                         </button>
                     </form>
+
+                    {/* Authentification Google — branchée avec le backend (Firebase Auth) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+                        <span style={{ flex: 1, height: 1, background: 'var(--ligne)' }}></span>
+                        <span style={{ fontSize: 12, color: 'var(--taupe)' }}>ou</span>
+                        <span style={{ flex: 1, height: 1, background: 'var(--ligne)' }}></span>
+                    </div>
+                    <button className="btn dark" disabled style={{ width: '100%', justifyContent: 'center', opacity: .6, cursor: 'not-allowed' }}>
+                        <span style={{ fontWeight: 700, marginRight: 6 }}>G</span> Continuer avec Google
+                        <span className="pill warn" style={{ marginLeft: 8 }}>Bientôt</span>
+                    </button>
                     <div className="demo-note">
                         <b>Démonstration</b> — email : <code>{compte.user}</code> · mot de passe : <code>{compte.pass}</code>{' '}
                         <button className="btn-x" style={{ textDecoration: 'underline' }} onClick={() => { setUser(compte.user); setPass(compte.pass); }}>
