@@ -65,7 +65,8 @@ export function ProviderAutorisations() {
                 <div>
                     <h1 className="portal-title">Autorisations</h1>
                     <p className="portal-sub">
-                        Vous décidez qui peut créer un compte, pour quel magasin, avec quel rôle et quelles méthodes de connexion.
+                        Vous autorisez uniquement les comptes PRO : le propriétaire d&rsquo;un magasin et ses
+                        collaborateurs. Les comptes clients finaux sont gérés par chaque magasin.
                     </p>
                 </div>
                 <button className="btn" onClick={() => setCreation(!creation)}>+ Nouvelle autorisation</button>
@@ -86,11 +87,10 @@ export function ProviderAutorisations() {
                             </select>
                         </div>
                         <div className="field">
-                            <label htmlFor="au-role">Rôle du compte</label>
+                            <label htmlFor="au-role">Rôle du compte (pro uniquement)</label>
                             <select id="au-role" value={fRole} onChange={(e) => setFRole(e.target.value as RoleCompte)}>
                                 <option>Propriétaire</option>
                                 <option>Équipe</option>
-                                <option>Client</option>
                             </select>
                         </div>
                         <div className="field">

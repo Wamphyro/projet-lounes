@@ -22,7 +22,10 @@ export type Magasin = {
     email: string;
 };
 
-export type RoleCompte = 'Propriétaire' | 'Équipe' | 'Client';
+/* Le provider n'administre QUE les comptes professionnels : le propriétaire
+   du magasin et ses collaborateurs. Les comptes CLIENTS finaux sont gérés
+   par chaque magasin depuis son portail équipe — jamais par le provider. */
+export type RoleCompte = 'Propriétaire' | 'Équipe';
 export type MethodeAuth = 'Email + mot de passe' | 'Google';
 
 export type Invitation = {
@@ -57,18 +60,17 @@ const MAGASINS_SEED: Magasin[] = [
 
 const INVITATIONS_SEED: Invitation[] = [
     { id: 'INV-103', email: 'sofia@dekaceram.fr', magasin: 'MAG-01', role: 'Équipe', methodes: ['Email + mot de passe', 'Google'], code: 'DC-7F3K-92QM', cree: '21/07/2026', statut: 'En attente' },
-    { id: 'INV-102', email: 'client@demo.fr', magasin: 'MAG-01', role: 'Client', methodes: ['Email + mot de passe'], code: 'DC-2N8V-51TR', cree: '02/07/2026', statut: 'Utilisée' },
+    { id: 'INV-102', email: 'contact@carrelagesdusud.fr', magasin: 'MAG-02', role: 'Propriétaire', methodes: ['Google'], code: 'DC-2N8V-51TR', cree: '18/07/2026', statut: 'Utilisée' },
 ];
 
 const COMPTES_SEED: Compte[] = [
     { id: 'CPT-01', nom: 'Lounès Dekkiche', email: 'pro@dekaceram.fr', magasin: 'MAG-01', role: 'Propriétaire', methode: 'Email + mot de passe', cree: '02/07/2026', statut: 'Actif' },
-    { id: 'CPT-02', nom: 'Julie Morel', email: 'client@demo.fr', magasin: 'MAG-01', role: 'Client', methode: 'Email + mot de passe', cree: '02/07/2026', statut: 'Actif' },
     { id: 'CPT-03', nom: 'Marc Olivieri', email: 'contact@carrelagesdusud.fr', magasin: 'MAG-02', role: 'Propriétaire', methode: 'Google', cree: '18/07/2026', statut: 'Actif' },
 ];
 
 export const useMagasins = () => useCollection<Magasin[]>('dc-prov-magasins', MAGASINS_SEED);
-export const useInvitations = () => useCollection<Invitation[]>('dc-prov-invitations', INVITATIONS_SEED);
-export const useComptes = () => useCollection<Compte[]>('dc-prov-comptes', COMPTES_SEED);
+export const useInvitations = () => useCollection<Invitation[]>('dc-prov-invitations-v2', INVITATIONS_SEED);
+export const useComptes = () => useCollection<Compte[]>('dc-prov-comptes-v2', COMPTES_SEED);
 
 const suivant = (liste: { id: string }[], prefixe: string, base: number) => {
     const max = liste.reduce((m, x) => Math.max(m, parseInt(x.id.replace(`${prefixe}-`, ''), 10) || 0), base);

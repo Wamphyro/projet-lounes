@@ -51,7 +51,10 @@ export function ProviderComptes() {
             <div className="portal-head">
                 <div>
                     <h1 className="portal-title">Comptes</h1>
-                    <p className="portal-sub">{comptes.length} comptes utilisateurs sur l&rsquo;ensemble des magasins.</p>
+                    <p className="portal-sub">
+                        {comptes.length} comptes PRO (propriétaires et collaborateurs). Les comptes clients
+                        finaux sont gérés par chaque magasin depuis son portail équipe.
+                    </p>
                 </div>
                 <button className="btn" onClick={() => setCreation(!creation)}>+ Créer un compte</button>
             </div>
@@ -79,11 +82,10 @@ export function ProviderComptes() {
                             </select>
                         </div>
                         <div className="field">
-                            <label htmlFor="cp-role">Rôle</label>
+                            <label htmlFor="cp-role">Rôle (pro uniquement)</label>
                             <select id="cp-role" value={fRole} onChange={(e) => setFRole(e.target.value as RoleCompte)}>
                                 <option>Propriétaire</option>
                                 <option>Équipe</option>
-                                <option>Client</option>
                             </select>
                         </div>
                     </div>
