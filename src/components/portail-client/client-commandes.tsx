@@ -35,7 +35,7 @@ export function ClientCommandes() {
                                     <span>{c.id}</span>
                                     <span className={`pill ${tone(c.statut)}`}>{c.statut}</span>
                                 </span>
-                                <span className="l2">{c.date} · {c.montant.toLocaleString('fr-FR')} € TTC</span>
+                                <span className="l2">{c.date} à {c.heure} · {c.montant.toLocaleString('fr-FR')} € TTC</span>
                             </button>
                         ))}
                     </div>
@@ -44,7 +44,7 @@ export function ClientCommandes() {
                         <div className="md-detail">
                             <h2>{sel.id}</h2>
                             <p style={{ fontSize: 13, color: 'var(--taupe)', margin: '4px 0 14px' }}>
-                                Passée le {sel.date} · {sel.montant.toLocaleString('fr-FR')} € TTC
+                                Passée le {sel.date} à {sel.heure} · {sel.montant.toLocaleString('fr-FR')} € TTC
                             </p>
                             <p style={{ fontWeight: 600, fontSize: 15 }}>{sel.detail}</p>
 

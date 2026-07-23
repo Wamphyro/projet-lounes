@@ -30,14 +30,28 @@ export type Devis = {
 };
 
 export type CommandeStatut = 'En préparation' | 'Prête au retrait' | 'En livraison' | 'Livrée';
+
+/** Ligne de commande — par RÉFÉRENCE (correspondance directe avec le stock). */
+export type LigneCommande = { ref: string; nom: string; quantite: number };
+
 export type Commande = {
     id: string;
     client: string;
     detail: string;
     montant: number;
     date: string;
+    heure: string;
     statut: CommandeStatut;
+    lignes: LigneCommande[];
+    /** Sortie de stock effectuée (à la fin de la préparation, en une fois). */
+    stockDeduit: boolean;
     etapes: string[];
+};
+
+/** Horodatage court pour le suivi : « 23/07/2026 à 14:05 ». */
+export const horodatage = () => {
+    const d = new Date();
+    return `${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
 };
 
 export type Demande = {
@@ -105,33 +119,48 @@ const DEVIS_SEED: Devis[] = [
 const COMMANDES_SEED: Commande[] = [
     {
         id: 'CMD-2609', client: 'Julie Morel', detail: 'Calacatta Oro 60×120 mat — 18 m² (salle de bain)',
-        montant: 1366, date: '22/07/2026', statut: 'En préparation',
-        etapes: ['Commande confirmée — 22/07', 'Préparation en cours, disponibilité estimée le 30/07'],
+        montant: 1366, date: '22/07/2026', heure: '09:41', statut: 'En préparation',
+        lignes: [{ ref: 'CAL-60X120-BLA', nom: 'Calacatta Oro · Blanc · 60×120', quantite: 18 }],
+        stockDeduit: false,
+        etapes: ['Commande confirmée — 22/07/2026 à 09:41', 'Préparation en cours — 22/07/2026 à 10:15 (disponibilité estimée le 30/07)'],
     },
     {
         id: 'CMD-2607', client: 'M. et Mme Perrin', detail: 'Calacatta Oro 120×120 — 42 m²',
-        montant: 3188, date: '21/07/2026', statut: 'En préparation',
-        etapes: ['Commande confirmée — 21/07'],
+        montant: 3188, date: '21/07/2026', heure: '14:22', statut: 'En préparation',
+        lignes: [{ ref: 'CAL-120X120-BLA', nom: 'Calacatta Oro · Blanc · 120×120', quantite: 42 }],
+        stockDeduit: false,
+        etapes: ['Commande confirmée — 21/07/2026 à 14:22'],
     },
     {
         id: 'CMD-2606', client: 'SARL Bâti-Sud (pro)', detail: 'Béton Ciré Taupe 90×90 — 180 m²',
-        montant: 8910, date: '20/07/2026', statut: 'En livraison',
-        etapes: ['Commande confirmée — 20/07', 'Préparée — 21/07', 'Départ transporteur — 22/07'],
+        montant: 8910, date: '20/07/2026', heure: '08:05', statut: 'En livraison',
+        lignes: [{ ref: 'BET-90X90-TAU', nom: 'Béton Ciré Taupe · Taupe · 90×90', quantite: 180 }],
+        stockDeduit: true,
+        etapes: ['Commande confirmée — 20/07/2026 à 08:05', 'Sortie de stock : 180 m² (1 référence) — 21/07/2026 à 08:30', 'Préparée — 21/07/2026 à 08:32', 'Départ transporteur — 22/07/2026 à 07:45'],
     },
     {
         id: 'CMD-2605', client: 'Mme Lefèvre', detail: 'Zellige Terre Cuite 10×10 — 9 m²',
-        montant: 1375, date: '18/07/2026', statut: 'Prête au retrait',
-        etapes: ['Commande confirmée — 18/07', 'Préparée, à retirer au showroom — 19/07'],
+        montant: 1375, date: '18/07/2026', heure: '11:37', statut: 'Prête au retrait',
+        lignes: [{ ref: 'ZEL-10X10-AMB', nom: 'Zellige Terre Cuite · Ambre · 10×10', quantite: 9 }],
+        stockDeduit: true,
+        etapes: ['Commande confirmée — 18/07/2026 à 11:37', 'Sortie de stock : 9 m² (1 référence) — 19/07/2026 à 09:02', 'Préparée, à retirer au showroom — 19/07/2026 à 09:20'],
     },
     {
         id: 'CMD-2598', client: 'Julie Morel', detail: 'Zellige Vert Émeraude 10×10 — 6,5 m² (crédence cuisine)',
-        montant: 969, date: '02/07/2026', statut: 'Livrée',
-        etapes: ['Commande confirmée — 02/07', 'Préparée — 04/07', 'Livrée — 09/07'],
+        montant: 969, date: '02/07/2026', heure: '16:03', statut: 'Livrée',
+        lignes: [{ ref: 'ZEL-10X10-VER', nom: 'Zellige Vert Émeraude · Vert · 10×10', quantite: 6.5 }],
+        stockDeduit: true,
+        etapes: ['Commande confirmée — 02/07/2026 à 16:03', 'Sortie de stock : 6,5 m² (1 référence) — 03/07/2026 à 08:40', 'Préparée — 04/07/2026 à 10:12', 'Livrée — 09/07/2026 à 14:30'],
     },
     {
         id: 'CMD-2603', client: 'M. Roussel', detail: 'Travertin Classique opus — 68 m² + margelles',
-        montant: 7140, date: '12/07/2026', statut: 'Livrée',
-        etapes: ['Commande confirmée — 12/07', 'Préparée — 15/07', 'Livrée sur chantier — 17/07'],
+        montant: 7140, date: '12/07/2026', heure: '10:48', statut: 'Livrée',
+        lignes: [
+            { ref: 'TRA-4-IVO', nom: 'Travertin Classique · Ivoire · Opus 4 formats', quantite: 68 },
+            { ref: 'PIE-40X60-BEI', nom: 'Pierre de Bourgogne · Beige · 40×60', quantite: 12 },
+        ],
+        stockDeduit: true,
+        etapes: ['Commande confirmée — 12/07/2026 à 10:48', 'Sortie de stock : 80 m² (2 références) — 13/07/2026 à 08:15', 'Préparée — 15/07/2026 à 09:00', 'Livrée sur chantier — 17/07/2026 à 08:30'],
     },
 ];
 
@@ -316,7 +345,7 @@ export function useCollection<T>(key: string, seed: T): [T, (v: T) => void] {
 /* ========================= Hooks métier ========================= */
 
 export const useDevis = () => useCollection<Devis[]>('dc-devis', DEVIS_SEED);
-export const useCommandes = () => useCollection<Commande[]>('dc-commandes', COMMANDES_SEED);
+export const useCommandes = () => useCollection<Commande[]>('dc-commandes-v2', COMMANDES_SEED);
 export const useDemandes = () => useCollection<Demande[]>('dc-demandes', DEMANDES_SEED);
 export const useStock = () => useCollection<Record<string, number>>('dc-stock-v2', STOCK_INITIAL);
 export const useReceptions = () => useCollection<Reception[]>('dc-receptions-v3', RECEPTIONS_SEED);
