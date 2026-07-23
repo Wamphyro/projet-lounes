@@ -714,10 +714,13 @@ body::before {
     background: #fff; border: 1.5px dashed var(--ambre); border-radius: 14px;
 }
 .qr-box {
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-    background: var(--creme); border-radius: 14px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    background: var(--creme); border-radius: 14px; padding: 14px;
 }
-.qr-box img { border-radius: 10px; }
+/* QR adaptatif : dimensionné sur la hauteur de la fenêtre pour que la
+   modal complète tienne à l'écran sans défilement. */
+.qr-box img { width: clamp(120px, 26vh, 200px); height: auto; border-radius: 10px; }
+.qr-box p { font-size: 12.5px; }
 .sig-apercu { max-height: 64px; width: auto; background: #fff; border: 1px solid var(--ligne); border-radius: 10px; padding: 4px 10px; }
 
 /* Barre de recherche des portails */

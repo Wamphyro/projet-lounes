@@ -59,7 +59,7 @@ export function SignatureModal({
                     <SignaturePad onValider={onSigne} />
                 ) : (
                     <div className="qr-box">
-                        {qr ? <img src={qr} alt={`QR code de signature pour ${docId}`} width={200} height={200} /> : <p>Génération du QR…</p>}
+                        {qr ? <img src={qr} alt={`QR code de signature pour ${docId}`} /> : <p>Génération du QR…</p>}
                         <p style={{ fontSize: 13, color: 'var(--taupe)', textAlign: 'center', maxWidth: 340 }}>
                             Le client scanne ce code avec son téléphone et signe sur la page qui s&rsquo;ouvre.
                             <br /><b>Démo :</b> la signature mobile reste sur le téléphone ; le lien de signature
