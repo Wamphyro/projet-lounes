@@ -15,7 +15,7 @@ import {
 import { exporterDevisPdf } from '@/services/document-pdf';
 
 /**
- * Devis (équipe) — liste maître/détail + CRÉATION de devis :
+ * Devis (pro) — liste maître/détail + CRÉATION de devis :
  * lignes composées depuis le catalogue (SSOT), remise, total en direct.
  * Statut piloté par le dropdown custom ; un devis « Envoyé » apparaît
  * immédiatement dans l'espace client concerné (store partagé).

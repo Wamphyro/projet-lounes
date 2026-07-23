@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     robots: { index: false },
 };
 
-/** Page de signature sur téléphone — ouverte par le QR code du portail équipe. */
+/** Page de signature sur téléphone — ouverte par le QR code du portail pro. */
 export default function SignerPage() {
     return (
         <Suspense>

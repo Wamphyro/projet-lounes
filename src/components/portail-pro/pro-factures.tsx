@@ -9,7 +9,7 @@ import { exporterFacturePdf } from '@/services/document-pdf';
 import { SearchBar } from '@/components/shared/search-bar';
 import { MessageComposer } from '@/components/shared/message-composer';
 
-/** Factures (équipe) — issues des devis acceptés, statut À régler / Réglée. */
+/** Factures (pro) — issues des devis acceptés, statut À régler / Réglée. */
 
 const tone = (s: FactureStatut) => (s === 'Réglée' ? 'ok' : 'warn');
 

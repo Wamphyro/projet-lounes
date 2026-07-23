@@ -21,7 +21,7 @@ export function ProviderAutorisations() {
     const [creation, setCreation] = useState(false);
     const [fEmail, setFEmail] = useState('');
     const [fMagasin, setFMagasin] = useState(magasins[0]?.id ?? 'MAG-01');
-    const [fRole, setFRole] = useState<RoleCompte>('Équipe');
+    const [fRole, setFRole] = useState<RoleCompte>('Collaborateur');
     const [fEmailMdp, setFEmailMdp] = useState(true);
     const [fGoogle, setFGoogle] = useState(true);
     const [copie, setCopie] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export function ProviderAutorisations() {
                             <label htmlFor="au-role">Rôle du compte (pro uniquement)</label>
                             <select id="au-role" value={fRole} onChange={(e) => setFRole(e.target.value as RoleCompte)}>
                                 <option>Propriétaire</option>
-                                <option>Équipe</option>
+                                <option>Collaborateur</option>
                             </select>
                         </div>
                         <div className="field">

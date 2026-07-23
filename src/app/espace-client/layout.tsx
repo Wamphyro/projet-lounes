@@ -14,7 +14,7 @@ const LINKS: PortalLink[] = [
     { href: '/espace-client/echantillons/', label: 'Mes échantillons', icone: '▤' },
 ];
 
-/** Portail CLIENT — miroir de l'espace équipe sur les éléments du client. */
+/** Portail CLIENT — miroir de l'espace pro sur les éléments du client. */
 export default function EspaceClientLayout({ children }: { children: React.ReactNode }) {
     return (
         <PortalShell type="client" titre={'Deka Céram\nEspace client'} links={LINKS}>

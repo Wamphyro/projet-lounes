@@ -17,7 +17,7 @@ src/
 ├── components/
 │   ├── site/               Composants du site vitrine UNIQUEMENT
 │   ├── portail-client/     Vues du portail client UNIQUEMENT
-│   ├── portail-pro/        Vues du portail équipe UNIQUEMENT
+│   ├── portail-pro/        Vues du portail pro UNIQUEMENT
 │   └── shared/             Transverses : logo, portal-shell (gate + sidebar),
 │                           dropdown (statuts custom), page-hero, scroll-reveal, json-ld
 │
@@ -31,7 +31,7 @@ src/
 │
 └── services/               ★ Couche d'accès aux données — LE point de branchement Firebase
     ├── commerce.ts         Store partagé devis/commandes/stock/demandes + hooks CRUD
-    │                       (l'équipe écrit, le client voit ses éléments en miroir)
+    │                       (le portail pro écrit, le client voit ses éléments en miroir)
     ├── panier.ts           Panier projet/échantillons
     └── demo-data.ts        Comptes démo + données client hors commerce (rdv, échantillons)
 ```

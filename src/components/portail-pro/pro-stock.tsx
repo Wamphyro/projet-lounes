@@ -11,7 +11,7 @@ import {
 } from '@/services/commerce';
 
 /**
- * Stock (équipe) — organisation MODÈLE → RÉFÉRENCES (réalité du négoce :
+ * Stock (pro) — organisation MODÈLE → RÉFÉRENCES (réalité du négoce :
  * une référence par couleur × format). Cliquer un modèle ouvre sa fiche :
  * infos produit + tableau de ses références avec stock et ajustement.
  * Réception de BL par référence (manuel maintenant, analyse IA à brancher).

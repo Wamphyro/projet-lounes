@@ -22,7 +22,7 @@ export function ProviderComptes() {
     const [fEmail, setFEmail] = useState('');
     const [fMdp, setFMdp] = useState('');
     const [fMagasin, setFMagasin] = useState(magasins[0]?.id ?? 'MAG-01');
-    const [fRole, setFRole] = useState<RoleCompte>('Équipe');
+    const [fRole, setFRole] = useState<RoleCompte>('Collaborateur');
 
     const nomMagasin = (id: string) => magasins.find((m) => m.id === id)?.nom ?? id;
 
@@ -53,7 +53,7 @@ export function ProviderComptes() {
                     <h1 className="portal-title">Comptes</h1>
                     <p className="portal-sub">
                         {comptes.length} comptes PRO (propriétaires et collaborateurs). Les comptes clients
-                        finaux sont gérés par chaque magasin depuis son portail équipe.
+                        finaux sont gérés par chaque magasin depuis son portail pro.
                     </p>
                 </div>
                 <button className="btn" onClick={() => setCreation(!creation)}>+ Créer un compte</button>
@@ -85,7 +85,7 @@ export function ProviderComptes() {
                             <label htmlFor="cp-role">Rôle (pro uniquement)</label>
                             <select id="cp-role" value={fRole} onChange={(e) => setFRole(e.target.value as RoleCompte)}>
                                 <option>Propriétaire</option>
-                                <option>Équipe</option>
+                                <option>Collaborateur</option>
                             </select>
                         </div>
                     </div>

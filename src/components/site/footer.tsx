@@ -46,7 +46,7 @@ export function Footer() {
                         <ul>
                             <li><Link href="/panier/">Mon projet</Link></li>
                             <li><Link href="/espace-client/">Espace client</Link></li>
-                            <li><Link href="/espace-pro/">Accès équipe</Link></li>
+                            <li><Link href="/espace-pro/">Espace pro</Link></li>
                             <li><Link href="/espace-provider/">Console provider</Link></li>
                         </ul>
                     </div>

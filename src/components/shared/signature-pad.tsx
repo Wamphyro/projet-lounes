@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * Pavé de signature au stylet / doigt / souris — canvas haute densité,
- * renvoie la signature en PNG (dataURL). Utilisé sur place (portail équipe)
+ * renvoie la signature en PNG (dataURL). Utilisé sur place (portail pro)
  * et sur téléphone (page /signer/ ouverte par QR code).
  */
 export function SignaturePad({

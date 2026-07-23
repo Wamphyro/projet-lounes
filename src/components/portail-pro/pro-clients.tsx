@@ -13,7 +13,7 @@ import { DEMO_CLIENT, ECHANTILLONS_CLIENT } from '@/services/demo-data';
 import { SearchBar } from '@/components/shared/search-bar';
 
 /**
- * Comptes clients (équipe) — recherche, création, ÉDITION et fiche détaillée :
+ * Comptes clients (pro) — recherche, création, ÉDITION et fiche détaillée :
  * identité complète (interlocuteur/SIRET pour les pros, origine du contact),
  * indicateurs (CA, panier moyen, encours), fil d'activité chronologique
  * (devis + factures + commandes fusionnés), éléments rattachés, et pour le

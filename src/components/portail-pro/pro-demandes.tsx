@@ -2,7 +2,7 @@
 
 import { useDemandes } from '@/services/commerce';
 
-/** Demandes entrantes (équipe) — devis, RDV, échantillons à traiter. */
+/** Demandes entrantes (pro) — devis, RDV, échantillons à traiter. */
 export function ProDemandes() {
     const [demandes, setDemandes] = useDemandes();
     const aTraiter = demandes.filter((d) => !d.traitee).length;

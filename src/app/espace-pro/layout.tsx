@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PortalShell, type PortalLink } from '@/components/shared/portal-shell';
 
 export const metadata: Metadata = {
-    title: 'Espace équipe',
+    title: 'Espace pro',
     robots: { index: false },
 };
 
@@ -16,10 +16,10 @@ const LINKS: PortalLink[] = [
     { href: '/espace-pro/demandes/', label: 'Demandes', icone: '✉' },
 ];
 
-/** Portail ÉQUIPE — application à part (aucun chrome du site vitrine). */
+/** Portail PRO — application à part (aucun chrome du site vitrine). */
 export default function EspaceProLayout({ children }: { children: React.ReactNode }) {
     return (
-        <PortalShell type="pro" titre={'Deka Céram\nÉquipe'} links={LINKS}>
+        <PortalShell type="pro" titre={'Deka Céram\nPro'} links={LINKS}>
             {children}
         </PortalShell>
     );

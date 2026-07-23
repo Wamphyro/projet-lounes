@@ -574,7 +574,7 @@ body::before {
 .stock-btns button:hover { border-color: var(--ambre); }
 
 /* ============================================================
-   Portails (équipe / client) — application à part : sidebar
+   Portails (pro / client) — application à part : sidebar
    sombre, contenu clair, dropdowns custom, fiches détail
    ============================================================ */
 .portal { display: flex; min-height: 100vh; background: var(--creme); }

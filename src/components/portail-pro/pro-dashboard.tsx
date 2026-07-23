@@ -6,7 +6,7 @@ import {
     useProduitsPerso, produitsTous, totalDevis, refsEnAlerte,
 } from '@/services/commerce';
 
-/** Tableau de bord équipe — indicateurs + activité récente. */
+/** Tableau de bord pro — indicateurs + activité récente. */
 export function ProDashboard() {
     const [devis] = useDevis();
     const [commandes] = useCommandes();

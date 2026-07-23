@@ -5,7 +5,7 @@ import { PRODUITS, TOUTES_VARIANTES, variantesDeProduit, type Produit } from '@/
 
 /**
  * Store COMMERCE partagé — devis, commandes, stock, demandes.
- * SSOT des deux portails : le portail équipe écrit, le portail client lit les
+ * SSOT des deux portails : le portail pro écrit, le portail client lit les
  * éléments qui le concernent (même navigateur en démo). Persistance
  * localStorage + événement de synchro, exactement comme le panier.
  *
@@ -249,6 +249,12 @@ const ACCES_SEED: Record<string, AccesClient> = {
 };
 
 export const useDemandesCompte = () => useCollection<DemandeCompte[]>('dc-demandes-compte', DEMANDES_COMPTE_SEED);
+
+/** Prochain numéro de demande de compte (DCC-XX). */
+export const prochainIdDemandeCompte = (l: DemandeCompte[]) => {
+    const max = l.reduce((m, d) => Math.max(m, parseInt(d.id.replace('DCC-', ''), 10) || 0), 13);
+    return `DCC-${max + 1}`;
+};
 export const useAccesClients = () => useCollection<Record<string, AccesClient>>('dc-acces-clients', ACCES_SEED);
 
 /** Facture — issue de la transformation d'un devis accepté (1 devis → 1 facture). */

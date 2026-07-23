@@ -10,7 +10,7 @@ import {
 } from '@/services/commerce';
 
 /**
- * Commandes (équipe) — liste maître/détail, suivi horodaté (date + heure) et
+ * Commandes (pro) — liste maître/détail, suivi horodaté (date + heure) et
  * CORRESPONDANCE STOCK : chaque commande porte ses lignes par référence.
  * La sortie de stock est automatique et UNIQUE, au premier passage au-delà
  * de « En préparation » ; s'il manque du stock sur une référence, le

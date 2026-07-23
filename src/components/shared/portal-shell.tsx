@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Monogram } from '@/components/shared/logo';
 import { DEMO_PRO, DEMO_CLIENT, DEMO_PROVIDER } from '@/services/demo-data';
+import { useDemandesCompte, prochainIdDemandeCompte } from '@/services/commerce';
 
 /**
- * Shell applicatif des portails (équipe / client) — à l'image du portail
+ * Shell applicatif des portails (pro / client) — à l'image du portail
  * patient Nexio : application À PART, sans la nav ni le footer du site.
  * Barre latérale sombre (rubriques + actif), en-tête, connexion démo intégrée.
  * Firebase Auth remplacera la porte de connexion, le shell ne bougera pas.
@@ -34,6 +35,34 @@ export function PortalShell({
     const [user, setUser] = useState('');
     const [pass, setPass] = useState('');
     const [erreur, setErreur] = useState(false);
+
+    /* — Demande de création de compte (espace client uniquement) :
+       alimente les « Demandes de création de compte » du portail pro. — */
+    const [demandes, setDemandes] = useDemandesCompte();
+    const [inscription, setInscription] = useState(false);
+    const [iNom, setINom] = useState('');
+    const [iEmail, setIEmail] = useState('');
+    const [iTel, setITel] = useState('');
+    const [iMsg, setIMsg] = useState('');
+    const [iEnvoyee, setIEnvoyee] = useState(false);
+
+    const demanderCompte = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!iNom.trim() || !iEmail.trim()) return;
+        setDemandes([
+            {
+                id: prochainIdDemandeCompte(demandes),
+                nom: iNom.trim(),
+                email: iEmail.trim(),
+                tel: iTel.trim(),
+                message: iMsg.trim() || undefined,
+                date: new Date().toLocaleDateString('fr-FR'),
+                statut: 'À traiter',
+            },
+            ...demandes,
+        ]);
+        setIEnvoyee(true);
+    };
 
     useEffect(() => {
         setConnecte(localStorage.getItem(storageKey) === 'ok');
@@ -105,6 +134,59 @@ export function PortalShell({
                             Remplir
                         </button>
                     </div>
+
+                    {/* — Création de compte : demande côté client, autorisation côté pro — */}
+                    {type === 'client' && !inscription && (
+                        <p style={{ marginTop: 16, fontSize: 14, textAlign: 'center' }}>
+                            Pas encore de compte ?{' '}
+                            <button className="btn-x" style={{ textDecoration: 'underline', fontWeight: 600, color: 'var(--ambre-fonce)' }} onClick={() => setInscription(true)}>
+                                Créer mon compte
+                            </button>
+                        </p>
+                    )}
+                    {type === 'client' && inscription && (
+                        <div style={{ marginTop: 18, borderTop: '1px solid var(--ligne)', paddingTop: 16 }}>
+                            {iEnvoyee ? (
+                                <div className="form-ok">
+                                    <b>Demande envoyée !</b> L&rsquo;équipe du magasin la rattache à votre dossier
+                                    et vous confirme l&rsquo;ouverture de votre accès par email.
+                                </div>
+                            ) : (
+                                <form onSubmit={demanderCompte}>
+                                    <h2 style={{ fontFamily: 'var(--serif)', fontWeight: 500, fontSize: 20, marginBottom: 4 }}>Créer mon compte</h2>
+                                    <p style={{ fontSize: 13, color: 'var(--taupe)', marginBottom: 14 }}>
+                                        Votre demande est vérifiée par le magasin puis rattachée à votre dossier client.
+                                    </p>
+                                    <div className="field" style={{ marginBottom: 12 }}>
+                                        <label htmlFor="ins-nom">Nom et prénom *</label>
+                                        <input id="ins-nom" value={iNom} onChange={(e) => setINom(e.target.value)} required placeholder="Votre nom" />
+                                    </div>
+                                    <div className="field" style={{ marginBottom: 12 }}>
+                                        <label htmlFor="ins-email">Email *</label>
+                                        <input id="ins-email" type="email" value={iEmail} onChange={(e) => setIEmail(e.target.value)} required placeholder="vous@exemple.fr" />
+                                    </div>
+                                    <div className="field" style={{ marginBottom: 12 }}>
+                                        <label htmlFor="ins-tel">Téléphone</label>
+                                        <input id="ins-tel" type="tel" value={iTel} onChange={(e) => setITel(e.target.value)} placeholder="06 …" />
+                                    </div>
+                                    <div className="field" style={{ marginBottom: 14 }}>
+                                        <label htmlFor="ins-msg">Votre projet (facultatif)</label>
+                                        <input id="ins-msg" value={iMsg} onChange={(e) => setIMsg(e.target.value)} placeholder="Devis en cours, projet à venir…" />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 10 }}>
+                                        <button type="submit" className="btn" style={{ flex: 1, justifyContent: 'center' }}>Envoyer ma demande</button>
+                                        <button type="button" className="btn-x" onClick={() => setInscription(false)}>Annuler</button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
+                    )}
+                    {type === 'pro' && (
+                        <p style={{ marginTop: 16, fontSize: 13, color: 'var(--taupe)', textAlign: 'center' }}>
+                            Les comptes pro sont créés sur autorisation de l&rsquo;administrateur (console provider).
+                        </p>
+                    )}
+
                     <p style={{ marginTop: 18, fontSize: 13 }}>
                         <Link href="/" style={{ color: 'var(--taupe)', textDecoration: 'underline' }}>← Retour au site</Link>
                     </p>

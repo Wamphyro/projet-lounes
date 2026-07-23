@@ -9,7 +9,7 @@ import { SignatureModal } from '@/components/shared/signature-modal';
 /**
  * Devis (client) — miroir du store partagé : le client voit les devis émis
  * par l'équipe et peut ACCEPTER ou REFUSER un devis « Envoyé ». Sa décision
- * apparaît immédiatement côté équipe (même store).
+ * apparaît immédiatement côté pro (même store).
  */
 
 const tone = (s: DevisStatut) =>
