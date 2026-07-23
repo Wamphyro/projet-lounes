@@ -749,7 +749,7 @@ body::before {
 .dd-trigger { border: none; cursor: pointer; font: inherit; display: inline-flex; align-items: center; gap: 8px; }
 .dd-caret { font-size: 10px; opacity: .7; }
 .dd-menu {
-    position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; min-width: 200px;
+    position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; left: auto; min-width: 200px;
     background: var(--creme-2); border: 1px solid var(--ligne); border-radius: 14px;
     box-shadow: 0 18px 40px rgba(42, 36, 29, .16); padding: 6px;
 }
@@ -798,6 +798,37 @@ body::before {
     * { animation: none !important; transition: none !important; }
     [data-reveal] { opacity: 1; transform: none; }
     html { scroll-behavior: auto; }
+}
+
+/* ============================================================
+   14bis. Audit mobile — tableaux défilants & anti-débordement
+   ============================================================ */
+/* Les tableaux larges défilent DANS leur conteneur au lieu d'écraser
+   les colonnes ou de pousser la page. */
+.table-scroll { -webkit-overflow-scrolling: touch; }
+.table-scroll .data-table { min-width: 560px; }
+
+/* Lignes de devis/factures/BL : défilement horizontal propre sur mobile. */
+@media (max-width: 760px) {
+    .lignes-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .lignes-table th, .lignes-table td { white-space: nowrap; }
+    .md-detail { padding: 18px 14px; }
+    .form-panel { padding: 18px 14px; }
+}
+
+/* Césure des contenus longs (emails, réfs, libellés d'étapes). */
+.spec-table td, .timeline li, .md-item .l2, .email-mock .em-corps, .email-mock .em-objet {
+    overflow-wrap: anywhere;
+}
+.md-item { min-width: 0; }
+.md-item .l1 { flex-wrap: wrap; }
+.composer-grid > div { min-width: 0; }
+.portal-main { overflow-x: clip; }
+
+/* Modales : sur petit écran, ancrées en haut et défilantes (rien de coupé). */
+@media (max-width: 640px), (max-height: 620px) {
+    .overlay { align-items: flex-start; overflow-y: auto; }
+    .composer { margin: 8px 0; max-height: none; }
 }
 
 /* ============================================================
